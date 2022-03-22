@@ -1,113 +1,50 @@
 import numpy as np
 
-class PathCollection:
-    """
-    Representation of a matplotlib PathCollection object.
-    In matplotlib, PathCollection is used to define the
-    data in a scatter plot
-    """
+def assert_similar_figures(figure1, figure2, attrs=("x_data", "y_data")):
+    figure1.assert_similar(figure2, attrs)
 
-    def __init__(self, pc):
-        if isinstance(pc, dict):
-            self.x_data = pc.get("x_data")
-            self.y_data = pc.get("y_data")
-            self.marker = pc.get("marker")
+class Figure:
+    """Representation of a matplotlib figure object"""
+    def __init__(self, fig):
+        if isinstance(fig, dict):
+            self.suptitle = fig.get("suptitle")
+            self.axes = [Axis(axis) for axis in fig["axes"]]
         else:
-            data = pc.get_offsets().data
-            self.x_data = data[:, 0]
-            self.y_data = data[:, 1]
-            self.marker = pc.get_paths()[0]
-
-    def __repr__(self):
-        rep = f'\n        "x_data": np.{repr(self.x_data)}, \n'
-        rep += f'        "y_data": np.{repr(self.y_data)}, \n'
-        rep += f'        "marker": {self.marker}'
-        return rep
-
-    def assert_similar(self, other, attrs):
-        """ Assert two PathCollections are similar """
-        pc_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(pc_attrs):
-            if attr in ["x_data", "y_data"]:
-                try:
-                    data_correct = np.allclose(getattr(self, attr),
-                                                 getattr(other, attr))
-                except ValueError:
-                    data_correct = False
-                finally:
-                    if not data_correct:
-                        raise AssertionError("Oops, scatter plot has points "
-                                              "in the wrong place")
-            elif attr == "marker":
-                try:
-                    vert_correct = np.allclose(self.marker.vertices,
-                                               other.marker.vertices)
-                    code_correct = np.allclose(self.marker.vertices,
-                                               other.marker.vertices)
-                    marker_correct = vert_correct and code_correct
-
-                except ValueError:
-                    marker_correct = False
-                finally:
-                    if not marker_correct:
-                        raise AssertionError("Incorrect marker in scatter plot")
-
-
-
-            elif np.all(getattr(self, attr) != getattr(other, attr)):
-                raise AssertionError(f"Oops, incorrect {attr}")
-
-class Line:
-    """Representation of a matplotlib line object"""
-    def __init__(self, line):
-        if isinstance(line, dict):
-            # we need to create a line from a dictionary
-            self.x_data = line.get("x_data")
-            self.y_data = line.get("y_data")
-            self.linewidth = line.get("linewidth")
-            self.linestyle = line.get("linestyle")
-            self.marker = line.get("marker")
-        else:
-            # we probably have a matplotlib figure
-            self.x_data = line.get_xdata()
-            self.y_data = line.get_ydata()
-            self.linewidth = line.get_linewidth()
-            self.linestyle = line.get_linestyle()
-            self.marker = line.get_marker()
-
-    def __repr__(self):
-        rep = f'\n            "x_data": np.{repr(self.x_data)}, \n'
-        rep += f'            "y_data": np.{repr(self.y_data)}, \n'
-        rep += f'            "linewidth": {self.linewidth}, \n'
-        rep += f'            "linestyle": "{self.linestyle}", \n'
-        rep += f'            "marker": "{self.marker}", \n        '
-        return rep
-
-    def assert_similar(self, other, attrs):
-        """Assert that the line is similar to another line"""
-
-        # test all the attributes that relate to a line
-        line_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(line_attrs):
-            if attr in ["x_data", "y_data"]:
-                # we have numeric data, so should test if close
-                # use a try except block to catch when allclose errors
-                # for example when the data are different lengths
-                try:
-                    data_correct = np.allclose(getattr(self, attr),
-                                               getattr(other, attr))
-                except:
-                    data_correct = False
-                finally:
-                    if not data_correct:
-                        raise AssertionError("Oops, this line isn't where "
-                                             "it should be")
+            sup_title = fig._suptitle
+            if sup_title:
+                self.suptitle = fig._suptitle.get_text()
             else:
-                # we have non numeric data, so can test exactly
-                if getattr(self, attr) != getattr(other, attr):
-                    raise AssertionError(f"Incorrect {attr}, " + "'" +
-                                         str(getattr(self, attr)) + "'")
+                self.suptitle = ""
+            self.axes = [Axis(axis) for axis in fig.get_axes()]
 
+    def get_num_axes(self):
+        """Returns the number of axes in the figure"""
+        return len(self.axes)
+
+    def assert_similar(self, other, attrs):
+        """Assert that the Figure is similar to another figure"""
+        if self.get_num_axes() != other.get_num_axes():
+            raise AssertionError(f"Incorrect number of axes (subfigures). "
+                                 f"Expected {other.get_num_axes()}, "
+                                 f"found {self.get_num_axes()}")
+
+        figure_attrs = self.__dict__.keys()
+        for attr in set(figure_attrs).intersection(attrs):
+            if getattr(self, attr) != getattr(other, attr):
+                raise AssertionError(f"Incorrect {attr}. "
+                                     f"Expected {getattr(other, attr)}, "
+                                     f"foud {getattr(self, attr)} \n")
+
+        for axis, other_axis in zip(self.axes, other.axes):
+            axis.assert_similar(other_axis, attrs)
+
+    def __repr__(self):
+        axis_repr = repr(list([{axis} for axis in self.axes]))
+        rep = "{\n"
+        rep += f'    "suptitle": "{self.suptitle}", \n'
+        rep += f'    "axes": {axis_repr}'
+        rep += "}\n"
+        return rep
 
 class Axis:
     """Representation of a matplotlib axes object"""
@@ -209,6 +146,118 @@ class Axis:
             pc.assert_similar(other_pc, attrs)
 
 
+class PathCollection:
+    """
+    Representation of a matplotlib PathCollection object.
+    In matplotlib, PathCollection is used to define the
+    data in a scatter plot
+    """
+
+    def __init__(self, pc):
+        if isinstance(pc, dict):
+            self.x_data = pc.get("x_data")
+            self.y_data = pc.get("y_data")
+            self.marker = pc.get("marker")
+        else:
+            data = pc.get_offsets().data
+            self.x_data = data[:, 0]
+            self.y_data = data[:, 1]
+            self.marker = pc.get_paths()[0]
+
+    def __repr__(self):
+        rep = f'\n        "x_data": np.{repr(self.x_data)}, \n'
+        rep += f'        "y_data": np.{repr(self.y_data)}, \n'
+        rep += f'        "marker": {self.marker}'
+        return rep
+
+    def assert_similar(self, other, attrs):
+        """ Assert two PathCollections are similar """
+        pc_attrs = self.__dict__.keys()
+        for attr in set(attrs).intersection(pc_attrs):
+            if attr in ["x_data", "y_data"]:
+                try:
+                    data_correct = np.allclose(getattr(self, attr),
+                                                 getattr(other, attr))
+                except ValueError:
+                    data_correct = False
+                finally:
+                    if not data_correct:
+                        raise AssertionError("Oops, scatter plot has points "
+                                              "in the wrong place")
+            elif attr == "marker":
+                try:
+                    vert_correct = np.allclose(self.marker.vertices,
+                                               other.marker.vertices)
+                    code_correct = np.allclose(self.marker.vertices,
+                                               other.marker.vertices)
+                    marker_correct = vert_correct and code_correct
+
+                except ValueError:
+                    marker_correct = False
+                finally:
+                    if not marker_correct:
+                        raise AssertionError("Incorrect marker in scatter plot")
+
+
+
+            elif np.all(getattr(self, attr) != getattr(other, attr)):
+                raise AssertionError(f"Oops, incorrect {attr}")
+
+
+class Line:
+    """Representation of a matplotlib line object"""
+    def __init__(self, line):
+        if isinstance(line, dict):
+            # we need to create a line from a dictionary
+            self.x_data = line.get("x_data")
+            self.y_data = line.get("y_data")
+            self.linewidth = line.get("linewidth")
+            self.linestyle = line.get("linestyle")
+            self.marker = line.get("marker")
+        else:
+            # we probably have a matplotlib figure
+            self.x_data = line.get_xdata()
+            self.y_data = line.get_ydata()
+            self.linewidth = line.get_linewidth()
+            self.linestyle = line.get_linestyle()
+            self.marker = line.get_marker()
+
+    def __repr__(self):
+        rep = f'\n            "x_data": np.{repr(self.x_data)}, \n'
+        rep += f'            "y_data": np.{repr(self.y_data)}, \n'
+        rep += f'            "linewidth": {self.linewidth}, \n'
+        rep += f'            "linestyle": "{self.linestyle}", \n'
+        rep += f'            "marker": "{self.marker}", \n        '
+        return rep
+
+    def assert_similar(self, other, attrs):
+        """Assert that the line is similar to another line"""
+
+        # test all the attributes that relate to a line
+        line_attrs = self.__dict__.keys()
+        for attr in set(attrs).intersection(line_attrs):
+            if attr in ["x_data", "y_data"]:
+                # we have numeric data, so should test if close
+                # use a try except block to catch when allclose errors
+                # for example when the data are different lengths
+                try:
+                    data_correct = np.allclose(getattr(self, attr),
+                                               getattr(other, attr))
+                except:
+                    data_correct = False
+                finally:
+                    if not data_correct:
+                        raise AssertionError("Oops, this line isn't where "
+                                             "it should be")
+            else:
+                # we have non numeric data, so can test exactly
+                if getattr(self, attr) != getattr(other, attr):
+                    raise AssertionError(f"Incorrect {attr}, " + "'" +
+                                         str(getattr(self, attr)) + "'")
+
+
+
+
 def check_text_equal(text, ref_text):
     """Check if two matplotlib.text.Text objects are equal"""
     if text is None and ref_text is None:
@@ -224,45 +273,3 @@ def check_text_equal(text, ref_text):
     return True
 
 
-class Figure:
-    """Representation of a matplotlib figure object"""
-    def __init__(self, fig):
-        if isinstance(fig, dict):
-            self.suptitle = fig.get("suptitle")
-            self.axes = [Axis(axis) for axis in fig["axes"]]
-        else:
-            sup_title = fig._suptitle
-            if sup_title:
-                self.suptitle = fig._suptitle.get_text()
-            else:
-                self.suptitle = ""
-            self.axes = [Axis(axis) for axis in fig.get_axes()]
-
-    def get_num_axes(self):
-        """Returns the number of axes in the figure"""
-        return len(self.axes)
-
-    def assert_similar(self, other, attrs):
-        """Assert that the Figure is similar to another figure"""
-        if self.get_num_axes() != other.get_num_axes():
-            raise AssertionError(f"Incorrect number of axes (subfigures). "
-                                 f"Expected {other.get_num_axes()}, "
-                                 f"found {self.get_num_axes()}")
-
-        figure_attrs = self.__dict__.keys()
-        for attr in set(figure_attrs).intersection(attrs):
-            if getattr(self, attr) != getattr(other, attr):
-                raise AssertionError(f"Incorrect {attr}. "
-                                     f"Expected {getattr(other, attr)}, "
-                                     f"foud {getattr(self, attr)} \n")
-
-        for axis, other_axis in zip(self.axes, other.axes):
-            axis.assert_similar(other_axis, attrs)
-
-    def __repr__(self):
-        axis_repr = repr(list([{axis} for axis in self.axes]))
-        rep = "{\n"
-        rep += f'    "suptitle": "{self.suptitle}", \n'
-        rep += f'    "axes": {axis_repr}'
-        rep += "}\n"
-        return rep
