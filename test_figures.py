@@ -1,7 +1,19 @@
 import numpy as np
 
-def assert_similar_figures(figure1, figure2, attrs=("x_data", "y_data")):
-    figure1.assert_similar(figure2, attrs)
+def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
+    """
+    Assert that two figures are similar.
+
+    Parameters:
+        ref_fig (matplotlib figure): The reference figure
+        other_fig (matplotlib figure): The figure to compare to the reference
+
+    Raises:
+        AssertionError if the figures are dissimilar
+    """
+    ref_fig = Figure(ref_fig)
+    other_fig = Figure(other_fig)
+    ref_fig.assert_similar(other_fig, attrs)
 
 class Figure:
     """Representation of a matplotlib figure object"""
@@ -63,6 +75,7 @@ class Axis:
             self.lines = [Line(line) for line in ax.get("lines")]
             self.path_collections = [PathCollection(pc)
                                      for pc in ax.get("path_collections", [])]
+            self.wedges = [Wedge(wedge) for wedge in ax.get("wedges", [])]
         else:
             # we need to create an axis from a matplotlib axis
             self.title = ax.get_title()
@@ -82,6 +95,7 @@ class Axis:
             self.lines = [Line(line) for line in ax.get_lines()]
             self.path_collections = [PathCollection(pc)
                                      for pc in ax.collections]
+            self.wedges = [Wedge(wedge) for wedge in ax.patches]
 
     def get_num_pc(self):
         """Return the number of path_collections"""
@@ -134,8 +148,8 @@ class Axis:
 
             elif getattr(self, attr) != getattr(other, attr):
                 raise AssertionError(f"Incorrect {attr}, "
-                                     f"'{getattr(self, attr)}'.  "
-                                     f"Expected '{getattr(other, attr)}'")
+                                     f"'{getattr(other, attr)}'.  "
+                                     f"Expected '{getattr(self, attr)}'")
 
         # check that the lines are similar
         for line, other_line in zip(self.lines, other.lines):
@@ -144,6 +158,36 @@ class Axis:
         # check that the path collections are similar
         for pc, other_pc in zip(self.path_collections, other.path_collections):
             pc.assert_similar(other_pc, attrs)
+
+        # check that the patches are similar
+        for patch, other_patch in zip(self.wedges, other.wedges):
+            patch.assert_similar(other_patch, attrs)
+
+class Wedge:
+    """
+    Representation of a matplotlib Wedge patch
+    """
+    def __init__(self, wedge):
+        if isinstance(wedge, dict):
+            self.r = wedge.get("r")
+            self.theta1 = wedge.get("theta1")
+            self.theta2 = wedge.get("theta2")
+            self.center = wedge.get("center")
+        else:
+            self.r = wedge.r
+            self.theta1 = wedge.theta1
+            self.theta2 = wedge.theta2
+            self.center = wedge.center
+
+    def assert_similar(self, other, attrs):
+        """
+        Assert that the wedge is similar the 'other' wedge
+        """
+        wedge_attrs = self.__dict__.keys()
+        for attr in set(attrs).intersection(wedge_attrs):
+            if getattr(self, attr) != getattr(other, attr):
+                raise AssertionError(f"Incorrect {attr}: {getattr(self, attr)}"
+                                     f"Expected {getattr(other, attr)}")
 
 
 class PathCollection:
@@ -182,7 +226,7 @@ class PathCollection:
                     data_correct = False
                 finally:
                     if not data_correct:
-                        raise AssertionError("Oops, scatter plot has points "
+                        raise AssertionError("Scatter plot has points "
                                               "in the wrong place")
             elif attr == "marker":
                 try:
@@ -201,7 +245,7 @@ class PathCollection:
 
 
             elif np.all(getattr(self, attr) != getattr(other, attr)):
-                raise AssertionError(f"Oops, incorrect {attr}")
+                raise AssertionError(f"Incorrect {attr}")
 
 
 class Line:
@@ -247,7 +291,7 @@ class Line:
                     data_correct = False
                 finally:
                     if not data_correct:
-                        raise AssertionError("Oops, this line isn't where "
+                        raise AssertionError("A line isn't where "
                                              "it should be")
             else:
                 # we have non numeric data, so can test exactly
