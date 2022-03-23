@@ -17,6 +17,7 @@ def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     other_fig = Figure(other_fig)
     ref_fig.assert_similar(other_fig, attrs)
 
+
 class Figure:
     """Representation of a matplotlib figure object"""
     def __init__(self, fig):
@@ -72,10 +73,12 @@ class Axis:
             self.y_scale = ax.get("y_scale")
             self.legend_entries = ax.get("legend_entries")
             self.grid_spec = ax.get("grid_spec")
+            # sort the lines, path_collections and patches, so that
+            # the order that they get plotted in doesn't matter
             self.lines = sorted([Line(line) for line in ax.get("lines")])
             self.path_collections = sorted([PathCollection(pc)
                                      for pc in ax.get("path_collections", [])])
-            self.wedges = [Wedge(wedge) for wedge in ax.get("wedges", [])]
+            self.patches = sorted([Wedge(wedge) for wedge in ax.get("wedges", [])])
         else:
             # we need to create an axis from a matplotlib axis
             self.title = ax.get_title()
@@ -92,10 +95,12 @@ class Axis:
             else:
                 self.legend_entries = [None]
             self.grid_spec = ax.get_gridspec().get_geometry()
+            # sort the lines, path_collections and patches, so that
+            # the order that they get plotted in doesn't matter
             self.lines = sorted([Line(line) for line in ax.get_lines()])
             self.path_collections = sorted([PathCollection(pc)
                                      for pc in ax.collections])
-            self.patches = [create_patch(patch) for patch in ax.patches]
+            self.patches = sorted([create_patch(patch) for patch in ax.patches])
 
     def get_num_pc(self):
         """Return the number of path_collections"""
@@ -171,27 +176,48 @@ def create_patch(patch):
     elif isinstance(patch, matplotlib.patches.Rectangle):
         return Rectangle(patch)
 
+@total_ordering
 class Patch:
     """
     Representation of a matplotlib patch
     """
-    def assert_similar(self, other, attrs):
-        # first, check if the type of the patches are the same
+    def check_similar(self, other, attrs=None):
+        if self.patch_type != other.patch_type:
+            msg = f"Incorrect shape. Expected {self.patch_type}, got {other.patch_type}"
+            return False, msg
+        attrs = self.all_attrs if not attrs else attrs
         if type(self) != type(other):
-            raise AssertionError("Incorrect patch type. ")
-        # make a dictionary with the attributes
-        patch_attrs = self.__dict__.keys()
-        # loop through all the attributes, and check their the same
-        for attr in set(attrs).intersection(patch_attrs):
+            return False, "Incorrect patch type."
+        for attr in set(attrs).intersection(self.all_attrs):
             if getattr(self, attr) != getattr(other, attr):
-                raise AssertionError(f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}. "
-                                     f"Expected {getattr(self, attr)}")
+                msg = f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}."
+                msg += f"Expected {getattr(self, attr)}"
+                return False, msg
+        return True, None
+
+    def assert_similar(self, other, attrs=None):
+        attrs = self.all_attrs if not attrs else attrs
+        # first, check if the type of the patches are the same
+        similar, msg = self.check_similar(other)
+        if not similar:
+            raise AssertionError(msg)
+
+    def __eq__(self, other):
+        similar, _ = self.check_similar(other)
+        return similar
+
+    def __gt__(self, other):
+        for attr in self.all_attrs:
+            if getattr(self, attr) > getattr(other, attr):
+                return True
+        return False
 
 class Rectangle(Patch):
     """
     Representation of a matplotlib Rectangle patch
     """
     patch_type = "rectangle"
+    all_attrs = ("height", "width", "position")
 
     def __init__(self, rectangle):
         if isinstance(rectangle, dict):
@@ -208,18 +234,20 @@ class Wedge(Patch):
     Representation of a matplotlib Wedge patch
     """
     patch_type = "wedge"
-
+    all_attrs = ("r", "theta1", "theta2", "center", "theta")
     def __init__(self, wedge):
         if isinstance(wedge, dict):
             self.r = wedge.get("r")
             self.theta1 = wedge.get("theta1")
             self.theta2 = wedge.get("theta2")
             self.center = wedge.get("center")
+            self.theta = abs(self.theta1 - self.theta2)
         else:
             self.r = wedge.r
             self.theta1 = wedge.theta1
             self.theta2 = wedge.theta2
             self.center = wedge.center
+            self.theta = abs(wedge.theta1 - wedge.theta2)
 
 
 @total_ordering
@@ -397,20 +425,3 @@ def check_text_equal(text, ref_text):
         return False
     return True
 
-
-if __name__ == "__main__":
-    line1 = Line({
-        "x_data": [2,3,4,5],
-        "y_data": [6,2,5,2],
-        "linestyle": "-",
-        "marker": None,
-        "linewidth": 1,
-    })
-    line2 = Line({
-        "x_data": [2,3,4,5],
-        "y_data": [7,4,1,2],
-        "linestyle": "-",
-        "marker": None,
-        "linewidth": 1,
-    })
-    print(line2 >= line1)
