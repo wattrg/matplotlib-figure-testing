@@ -73,8 +73,8 @@ class Axis:
             self.legend_entries = ax.get("legend_entries")
             self.grid_spec = ax.get("grid_spec")
             self.lines = sorted([Line(line) for line in ax.get("lines")])
-            self.path_collections = [PathCollection(pc)
-                                     for pc in ax.get("path_collections", [])]
+            self.path_collections = sorted([PathCollection(pc)
+                                     for pc in ax.get("path_collections", [])])
             self.wedges = [Wedge(wedge) for wedge in ax.get("wedges", [])]
         else:
             # we need to create an axis from a matplotlib axis
@@ -93,8 +93,8 @@ class Axis:
                 self.legend_entries = [None]
             self.grid_spec = ax.get_gridspec().get_geometry()
             self.lines = sorted([Line(line) for line in ax.get_lines()])
-            self.path_collections = [PathCollection(pc)
-                                     for pc in ax.collections]
+            self.path_collections = sorted([PathCollection(pc)
+                                     for pc in ax.collections])
             self.patches = [create_patch(patch) for patch in ax.patches]
 
     def get_num_pc(self):
@@ -222,13 +222,14 @@ class Wedge(Patch):
             self.center = wedge.center
 
 
+@total_ordering
 class PathCollection:
     """
     Representation of a matplotlib PathCollection object.
     In matplotlib, PathCollection is used to define the
     data in a scatter plot
     """
-
+    all_attrs = ("x_data", "y_data", "marker")
     def __init__(self, pc):
         if isinstance(pc, dict):
             self.x_data = pc.get("x_data")
@@ -246,11 +247,26 @@ class PathCollection:
         rep += f'        "marker": {self.marker}'
         return rep
 
-    def assert_similar(self, other, attrs):
-        """ Assert two PathCollections are similar """
-        pc_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(pc_attrs):
-            if attr in ["x_data", "y_data"]:
+    def __eq__(self, other):
+        eq, _ = self.check_similar(other)
+        if eq:
+            return True
+        return False
+
+    def __gt__(self, other):
+        if self.marker.vertices.tolist() > other.marker.vertices.tolist():
+            return True
+        if list(self.x_data) > list(other.x_data):
+            return True
+        if list(self.y_data) > list(other.y_data):
+            return True
+        return False
+
+    def check_similar(self, other, attrs=None):
+        """ Check if two PathCollections are similar """
+        attrs = self.all_attrs if not attrs else attrs
+        for attr in set(attrs).intersection(self.all_attrs):
+            if attr in ("x_data", "y_data"):
                 try:
                     data_correct = np.allclose(getattr(self, attr),
                                                  getattr(other, attr))
@@ -258,8 +274,8 @@ class PathCollection:
                     data_correct = False
                 finally:
                     if not data_correct:
-                        raise AssertionError("Scatter plot has points "
-                                              "in the wrong place")
+                        msg = "Scatter plot has points in the wrong place"
+                        return False, msg
             elif attr == "marker":
                 try:
                     vert_correct = np.allclose(self.marker.vertices,
@@ -270,14 +286,17 @@ class PathCollection:
 
                 except ValueError:
                     marker_correct = False
-                finally:
-                    if not marker_correct:
-                        raise AssertionError("Incorrect marker in scatter plot")
+                if not marker_correct:
+                    return False, "Incorrect marker in scatter plot"
+        return True, None
 
 
-
-            elif np.all(getattr(self, attr) != getattr(other, attr)):
-                raise AssertionError(f"Incorrect {attr}")
+    def assert_similar(self, other, attrs=None):
+        """ Assert two PathCollections are similar """
+        attrs = self.all_attrs if not attrs else attrs
+        similar, msg = self.check_similar(other, attrs)
+        if not similar:
+            raise AssertionError(msg)
 
 
 @total_ordering
@@ -355,9 +374,10 @@ class Line:
                     return False, msg
         return True, None
 
-    def assert_similar(self, other, attrs):
+    def assert_similar(self, other, attrs=None):
         """Assert that the line is similar to another line"""
 
+        attrs = self.all_attrs if not attrs else attrs
         similar, msg = self.check_similar(other, attrs)
         if not similar:
             raise AssertionError(msg)

@@ -72,8 +72,10 @@ def test_bar_dissimilar():
 def test_scatter_similar():
     fig, ax = plt.subplots()
     ax.scatter([1,2,3,4], [7,4,2,6])
+    ax.scatter([2,2,3,4], [8,4,2,6])
 
     fig2, ax2 = plt.subplots()
+    ax2.scatter([2,2,3,4], [8,4,2,6])
     ax2.scatter([1,2,3,4], [7,4,2,6])
 
     assert_similar_figures(fig, fig2, ("x_data", "y_data"))
@@ -81,10 +83,12 @@ def test_scatter_similar():
 @register_test(should_fail=True)
 def test_scatter_similar():
     fig, ax = plt.subplots()
-    ax.scatter([1,2,3,4], [7,4,2,6], marker='x')
+    ax.scatter([1,2,3,4], [7,4,2,6])
+    ax.scatter([2,2,3,4], [8,4,2,6])
 
     fig2, ax2 = plt.subplots()
-    ax2.scatter([1,2,3,4], [7,4,2,6], marker='o')
+    ax2.scatter([2,2,3,4], [8,4,2,6])
+    ax2.scatter([2,2,3,4], [7,4,2,6])
 
     assert_similar_figures(fig, fig2, ("x_data", "y_data", "marker"))
 
