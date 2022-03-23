@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib
+from functools import total_ordering
 
 def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     """
@@ -279,6 +280,7 @@ class PathCollection:
                 raise AssertionError(f"Incorrect {attr}")
 
 
+@total_ordering
 class Line:
     """Representation of a matplotlib line object"""
     all_attrs = ("x_data", "y_data", "linewidth", "linestyle", "marker")
@@ -309,38 +311,6 @@ class Line:
     def __eq__(self, other):
         similar, _ = self.check_similar(other)
         return similar
-
-    def __le__(self, other):
-        if self < other:
-            return True
-        if self == other:
-            return True
-        return False
-
-    def __ge__(self, other):
-        if self > other:
-            return True
-        if self == other:
-            return True
-        return False
-
-    def __ne__(self, other):
-        if not (self == other):
-            return True
-        return False
-
-    def __lt__(self, other):
-        if self.linewidth < other.linewidth:
-            return True
-        if self.linestyle < other.linestyle:
-            return True
-        if (self.marker is not None) and (other.marker is not None) and (self.marker < other.marker):
-            return True
-        if list(self.x_data) < list(other.x_data):
-            return True
-        if list(self.y_data) < list(other.y_data):
-            return True
-        return False
 
     def __gt__(self, other):
         if self.linewidth > other.linewidth:
@@ -423,4 +393,4 @@ if __name__ == "__main__":
         "marker": None,
         "linewidth": 1,
     })
-    print(line2 == line1)
+    print(line2 >= line1)
