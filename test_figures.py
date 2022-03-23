@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib
+from functools import total_ordering
 
 def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     """
@@ -71,7 +72,7 @@ class Axis:
             self.y_scale = ax.get("y_scale")
             self.legend_entries = ax.get("legend_entries")
             self.grid_spec = ax.get("grid_spec")
-            self.lines = [Line(line) for line in ax.get("lines")]
+            self.lines = sorted([Line(line) for line in ax.get("lines")])
             self.path_collections = [PathCollection(pc)
                                      for pc in ax.get("path_collections", [])]
             self.wedges = [Wedge(wedge) for wedge in ax.get("wedges", [])]
@@ -91,7 +92,7 @@ class Axis:
             else:
                 self.legend_entries = [None]
             self.grid_spec = ax.get_gridspec().get_geometry()
-            self.lines = [Line(line) for line in ax.get_lines()]
+            self.lines = sorted([Line(line) for line in ax.get_lines()])
             self.path_collections = [PathCollection(pc)
                                      for pc in ax.collections]
             self.patches = [create_patch(patch) for patch in ax.patches]
@@ -152,7 +153,7 @@ class Axis:
                                      f"'{getattr(other, attr)}'.  "
                                      f"Expected '{getattr(self, attr)}'")
 
-        # check that the lines are similar
+        # check that the lines are similar. The lines may be in a different order
         for line, other_line in zip(self.lines, other.lines):
             line.assert_similar(other_line, attrs)
 
@@ -279,8 +280,10 @@ class PathCollection:
                 raise AssertionError(f"Incorrect {attr}")
 
 
+#@total_ordering
 class Line:
     """Representation of a matplotlib line object"""
+    all_attrs = ("x_data", "y_data", "linewidth", "linestyle", "marker")
     def __init__(self, line):
         if isinstance(line, dict):
             # we need to create a line from a dictionary
@@ -305,9 +308,57 @@ class Line:
         rep += f'            "marker": "{self.marker}", \n        '
         return rep
 
-    def assert_similar(self, other, attrs):
-        """Assert that the line is similar to another line"""
+    def __eq__(self, other):
+        return self.check_similar(other, self.all_attrs)
 
+    def __le__(self, other):
+        if self < other:
+            return True
+        if self == other:
+            return True
+        return False
+
+    def __ge__(self, other):
+        if self > other:
+            return True
+        if self == other:
+            return True
+        return False
+
+    def __ne__(self, other):
+        if self != other:
+            return True
+
+    def __lt__(self, other):
+        if list(self.x_data) < list(other.x_data):
+            return True
+        if list(self.y_data) < list(other.y_data):
+            return True
+        if self.linewidth < other.linewidth:
+            return True
+        if self.linestyle < other.linestyle:
+            return True
+        if (self.marker is not None) and (other.marker is not None) and (self.marker < other.marker):
+            return True
+        return False
+
+    def __gt__(self, other):
+        if list(self.x_data) > list(other.x_data):
+            return True
+        if list(self.y_data) > list(other.y_data):
+            return True
+        if self.linewidth > other.linewidth:
+            return True
+        if self.linestyle > other.linestyle:
+            return True
+        if (self.marker is not None) and (other.marker is not None) and (self.marker > other.marker):
+            return True
+        return False
+
+    def check_similar(self, other, attrs=None):
+        """ Check if two lines are similar """
+
+        attrs = self.all_attrs if not attrs else attrs
         # test all the attributes that relate to a line
         line_attrs = self.__dict__.keys()
         for attr in set(attrs).intersection(line_attrs):
@@ -322,17 +373,24 @@ class Line:
                     data_correct = False
                 finally:
                     if not data_correct:
-                        raise AssertionError("A line isn't where "
-                                             "it should be\n"
-                                             f"Expected {attr}: {getattr(self, attr)}\n"
-                                             f"Got {getattr(other, attr)}")
+                        msg = f"A line isn't where it should be\n"
+                        msg += f"Expected {attr}: {getattr(self, attr)}\n"
+                        msg += f"But got {getattr(other, attr)}\n"
+                        return False, msg
             else:
                 # we have non numeric data, so can test exactly
                 if getattr(self, attr) != getattr(other, attr):
-                    raise AssertionError(f"Incorrect {attr}, " + "'" +
-                                         str(getattr(self, attr)) + "'")
+                    msg = f"Incorrect {attr}, '{getattr(self, attr)}'."
+                    msg += f"Expected '{getattr(other, attr)}'"
+                    return False, msg
+            return True, None
 
+    def assert_similar(self, other, attrs):
+        """Assert that the line is similar to another line"""
 
+        similar, msg = self.check_similar(other, attrs)
+        if not similar:
+            raise AssertionError(msg)
 
 
 def check_text_equal(text, ref_text):
@@ -348,5 +406,3 @@ def check_text_equal(text, ref_text):
     if text.get_text() != ref_text.get_text():
         return False
     return True
-
-

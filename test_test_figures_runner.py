@@ -22,7 +22,7 @@ def run_tests():
     print(f"Running {total_tests} tests")
     print()
     for test, should_error in _tests:
-        print(f"'{test.__name__}': ", end="")
+        print(f"{test.__name__}: ", end="")
         result, msg = _run_test(test, should_error)
         if result == TestResult.PASS:
             passes += 1

@@ -6,13 +6,13 @@ from test_test_figures_runner import run_tests, register_test
 def test_line_plot_one_axes_same_plot():
     fig, ax = plt.subplots()
     ax.plot([1,2,3,4], [6,2,5,2])
-    ax.legend(["This line"])
+    ax.plot([2,3,4,5], [7,4,1,2])
 
     fig2, ax2 = plt.subplots()
+    ax2.plot([2,3,4,5], [7,4,1,2])
     ax2.plot([1,2,3,4], [6,2,5,2])
-    ax.legend(["This line"])
 
-    assert_similar_figures(fig, fig2, ("x_data", "y_data", "legend"))
+    assert_similar_figures(fig, fig2, ("x_data", "y_data"))
 
 @register_test(should_fail=True)
 def test_line_plot_one_axes_dissimilar_plot():
@@ -65,6 +65,26 @@ def test_bar_dissimilar():
     ax2.bar([1, 2, 3], [6,8,1])
 
     assert_similar_figures(fig, fig2, ("width", "height", "position"))
+
+@register_test()
+def test_scatter_similar():
+    fig, ax = plt.subplots()
+    ax.scatter([1,2,3,4], [7,4,2,6])
+
+    fig2, ax2 = plt.subplots()
+    ax2.scatter([1,2,3,4], [7,4,2,6])
+
+    assert_similar_figures(fig, fig2, ("x_data", "y_data"))
+
+@register_test(should_fail=True)
+def test_scatter_similar():
+    fig, ax = plt.subplots()
+    ax.scatter([1,2,3,4], [7,4,2,6], marker='x')
+
+    fig2, ax2 = plt.subplots()
+    ax2.scatter([1,2,3,4], [7,4,2,6], marker='o')
+
+    assert_similar_figures(fig, fig2, ("x_data", "y_data", "marker"))
 
 if __name__ == "__main__":
     run_tests()
