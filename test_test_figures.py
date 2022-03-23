@@ -18,9 +18,11 @@ def test_line_plot_one_axes_same_plot():
 def test_line_plot_one_axes_dissimilar_plot():
     fig, ax = plt.subplots()
     ax.plot([1,2,3,4], [7,2,5,2])
+    ax.plot([2,3,4,5], [7,4,1,2])
     ax.legend(["This line"])
 
     fig2, ax2 = plt.subplots()
+    ax2.plot([2,3,4,5], [7,4,1,2])
     ax2.plot([1,2,3,4], [6,2,5,2])
     ax.legend(["This line"])
 

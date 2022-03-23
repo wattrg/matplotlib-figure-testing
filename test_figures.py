@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib
-from functools import total_ordering
 
 def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     """
@@ -280,7 +279,6 @@ class PathCollection:
                 raise AssertionError(f"Incorrect {attr}")
 
 
-#@total_ordering
 class Line:
     """Representation of a matplotlib line object"""
     all_attrs = ("x_data", "y_data", "linewidth", "linestyle", "marker")
@@ -309,7 +307,8 @@ class Line:
         return rep
 
     def __eq__(self, other):
-        return self.check_similar(other, self.all_attrs)
+        similar, _ = self.check_similar(other)
+        return similar
 
     def __le__(self, other):
         if self < other:
@@ -326,32 +325,33 @@ class Line:
         return False
 
     def __ne__(self, other):
-        if self != other:
+        if not (self == other):
             return True
+        return False
 
     def __lt__(self, other):
-        if list(self.x_data) < list(other.x_data):
-            return True
-        if list(self.y_data) < list(other.y_data):
-            return True
         if self.linewidth < other.linewidth:
             return True
         if self.linestyle < other.linestyle:
             return True
         if (self.marker is not None) and (other.marker is not None) and (self.marker < other.marker):
             return True
+        if list(self.x_data) < list(other.x_data):
+            return True
+        if list(self.y_data) < list(other.y_data):
+            return True
         return False
 
     def __gt__(self, other):
-        if list(self.x_data) > list(other.x_data):
-            return True
-        if list(self.y_data) > list(other.y_data):
-            return True
         if self.linewidth > other.linewidth:
             return True
         if self.linestyle > other.linestyle:
             return True
         if (self.marker is not None) and (other.marker is not None) and (self.marker > other.marker):
+            return True
+        if list(self.x_data) > list(other.x_data):
+            return True
+        if list(self.y_data) > list(other.y_data):
             return True
         return False
 
@@ -362,7 +362,7 @@ class Line:
         # test all the attributes that relate to a line
         line_attrs = self.__dict__.keys()
         for attr in set(attrs).intersection(line_attrs):
-            if attr in ["x_data", "y_data"]:
+            if attr in ("x_data", "y_data"):
                 # we have numeric data, so should test if close
                 # use a try except block to catch when allclose errors
                 # for example when the data are different lengths
@@ -371,19 +371,19 @@ class Line:
                                                getattr(other, attr))
                 except:
                     data_correct = False
-                finally:
-                    if not data_correct:
-                        msg = f"A line isn't where it should be\n"
-                        msg += f"Expected {attr}: {getattr(self, attr)}\n"
-                        msg += f"But got {getattr(other, attr)}\n"
-                        return False, msg
+
+                if not data_correct:
+                    msg = f"A line isn't where it should be\n"
+                    msg += f"Expected {attr}: {getattr(self, attr)}\n"
+                    msg += f"But got {getattr(other, attr)}\n"
+                    return False, msg
             else:
                 # we have non numeric data, so can test exactly
                 if getattr(self, attr) != getattr(other, attr):
                     msg = f"Incorrect {attr}, '{getattr(self, attr)}'."
                     msg += f"Expected '{getattr(other, attr)}'"
                     return False, msg
-            return True, None
+        return True, None
 
     def assert_similar(self, other, attrs):
         """Assert that the line is similar to another line"""
@@ -406,3 +406,21 @@ def check_text_equal(text, ref_text):
     if text.get_text() != ref_text.get_text():
         return False
     return True
+
+
+if __name__ == "__main__":
+    line1 = Line({
+        "x_data": [2,3,4,5],
+        "y_data": [6,2,5,2],
+        "linestyle": "-",
+        "marker": None,
+        "linewidth": 1,
+    })
+    line2 = Line({
+        "x_data": [2,3,4,5],
+        "y_data": [7,4,1,2],
+        "linestyle": "-",
+        "marker": None,
+        "linewidth": 1,
+    })
+    print(line2 == line1)
