@@ -33,4 +33,5 @@ Where `attrs` is a tuple of attributes you would like to compare. Possible entri
 * `"theta"` (for wedge patches)
 * `"center"` (for wedge patches)
 * `"r"` (for wedge patches)
-If a provided attribute doesn't make sense for the particular object being compared, it will be ignored.
+
+If a provided attribute doesn't make sense for the particular object being compared, it will be ignored. If `attrs` is not provided, all the relevent attributes will be tested.
