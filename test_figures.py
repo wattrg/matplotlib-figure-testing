@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 
 def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     """
@@ -52,10 +53,8 @@ class Figure:
 
     def __repr__(self):
         axis_repr = repr(list([{axis} for axis in self.axes]))
-        rep = "{\n"
         rep += f'    "suptitle": "{self.suptitle}", \n'
         rep += f'    "axes": {axis_repr}'
-        rep += "}\n"
         return rep
 
 class Axis:
@@ -95,7 +94,7 @@ class Axis:
             self.lines = [Line(line) for line in ax.get_lines()]
             self.path_collections = [PathCollection(pc)
                                      for pc in ax.collections]
-            self.wedges = [Wedge(wedge) for wedge in ax.patches]
+            self.patches = [create_patch(patch) for patch in ax.patches]
 
     def get_num_pc(self):
         """Return the number of path_collections"""
@@ -106,7 +105,8 @@ class Axis:
         return len(self.lines)
 
     def __repr__(self):
-        rep = f'\n        "title": "{self.title}", \n'
+        rep = "{\n"
+        rep += f'        "title": "{self.title}", \n'
         rep += f'        "xlabel": "{self.xlabel}", \n'
         rep += f'        "ylabel": "{self.ylabel}", \n'
         rep += f'        "xtick_label": {self.xtick_label}, \n'
@@ -120,6 +120,7 @@ class Axis:
         rep += '        "lines": ' + f"{lines_repr},\n    "
         pc_repr = repr([{pc} for pc in self.path_collections])
         rep += f'        "path_collections": {pc_repr}\n '
+        rep += "}"
         return rep
 
     def assert_similar(self, other, attrs):
@@ -160,13 +161,53 @@ class Axis:
             pc.assert_similar(other_pc, attrs)
 
         # check that the patches are similar
-        for patch, other_patch in zip(self.wedges, other.wedges):
+        for patch, other_patch in zip(self.patches, other.patches):
             patch.assert_similar(other_patch, attrs)
 
-class Wedge:
+def create_patch(patch):
+    if isinstance(patch, matplotlib.patches.Wedge):
+        return Wedge(patch)
+    elif isinstance(patch, matplotlib.patches.Rectangle):
+        return Rectangle(patch)
+
+class Patch:
+    """
+    Representation of a matplotlib patch
+    """
+    def assert_similar(self, other, attrs):
+        # first, check if the type of the patches are the same
+        if type(self) != type(other):
+            raise AssertionError("Incorrect patch type. ")
+        # make a dictionary with the attributes
+        patch_attrs = self.__dict__.keys()
+        # loop through all the attributes, and check their the same
+        for attr in set(attrs).intersection(patch_attrs):
+            if getattr(self, attr) != getattr(other, attr):
+                raise AssertionError(f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}. "
+                                     f"Expected {getattr(self, attr)}")
+
+class Rectangle(Patch):
+    """
+    Representation of a matplotlib Rectangle patch
+    """
+    patch_type = "rectangle"
+
+    def __init__(self, rectangle):
+        if isinstance(rectangle, dict):
+            self.height = rectangle.get("height")
+            self.width = rectangle.get("width")
+            self.position = rectangel.get("position")
+        else:
+            self.height = rectangle.get_height()
+            self.width = rectangle.get_width()
+            self.position = rectangle.get_xy()
+
+class Wedge(Patch):
     """
     Representation of a matplotlib Wedge patch
     """
+    patch_type = "wedge"
+
     def __init__(self, wedge):
         if isinstance(wedge, dict):
             self.r = wedge.get("r")
@@ -178,16 +219,6 @@ class Wedge:
             self.theta1 = wedge.theta1
             self.theta2 = wedge.theta2
             self.center = wedge.center
-
-    def assert_similar(self, other, attrs):
-        """
-        Assert that the wedge is similar the 'other' wedge
-        """
-        wedge_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(wedge_attrs):
-            if getattr(self, attr) != getattr(other, attr):
-                raise AssertionError(f"Incorrect {attr}: {getattr(self, attr)}"
-                                     f"Expected {getattr(other, attr)}")
 
 
 class PathCollection:
@@ -292,7 +323,9 @@ class Line:
                 finally:
                     if not data_correct:
                         raise AssertionError("A line isn't where "
-                                             "it should be")
+                                             "it should be\n"
+                                             f"Expected {attr}: {getattr(self, attr)}\n"
+                                             f"Got {getattr(other, attr)}")
             else:
                 # we have non numeric data, so can test exactly
                 if getattr(self, attr) != getattr(other, attr):

@@ -1,33 +1,41 @@
 from enum import Enum
 import traceback
 
-class TestResult(Enum):
-    PASS=0
-    FAIL=1
-    SKIP=2 # the test probably failed to execute
+_tests = []
 
-def run_tests(tests):
-    total_tests = len(tests)
+class TestResult(Enum):
+    PASS=0 # successful test
+    FAIL=1 # the test failed
+    SKIP=2 # the test bailed out early
+
+class colours:
+    PASS="\033[92m"
+    FAIL="\033[91m"
+    SKIP="\033[93m"
+    ENDC="\033[0m"
+
+def run_tests():
+    total_tests = len(_tests)
     fails = 0
     passes = 0
     skips = 0
     print(f"Running {total_tests} tests")
     print()
-    for test, should_error in tests:
+    for test, should_error in _tests:
         print(f"'{test.__name__}': ", end="")
         result, msg = _run_test(test, should_error)
         if result == TestResult.PASS:
             passes += 1
-            print("Pass")
+            print(f"{colours.PASS}PASS.{colours.ENDC}")
         elif result == TestResult.FAIL:
             fails += 1
-            print(f"FAIL: {msg}")
+            print(f"{colours.FAIL}FAIL{colours.ENDC}. {msg}")
         elif result == TestResult.SKIP:
             skips += 1
-            print(f"SKIP: {msg}")
+            print(f"{colours.SKIP}SKIP{colours.ENDC}. {msg}")
             print()
         else:
-            msg = "Unknown test result. Results of test was:\n"
+            msg = "Unknown test result. The test returned:\n"
             msg += f"result: {result}, msg: {msg}"
             raise Exception(msg)
 
@@ -60,3 +68,8 @@ def _run_test(test, should_error):
         msg = f"The test failed unexpectedly with traceback:\n"
         msg += traceback.format_exc()
         return TestResult.SKIP, msg
+
+def register_test(should_fail=False):
+    def _register_test(test):
+        _tests.append((test, should_fail))
+    return _register_test
