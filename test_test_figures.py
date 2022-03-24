@@ -81,7 +81,7 @@ def test_scatter_similar():
     assert_similar_figures(fig, fig2, ("x_data", "y_data"))
 
 @register_test(should_fail=True)
-def test_scatter_similar():
+def test_scatter_dissimilar():
     fig, ax = plt.subplots()
     ax.scatter([1,2,3,4], [7,4,2,6])
     ax.scatter([2,2,3,4], [8,4,2,6])
