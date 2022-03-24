@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib
 from functools import total_ordering
+import math
 
 def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
     """
@@ -176,7 +177,6 @@ def create_patch(patch):
     elif isinstance(patch, matplotlib.patches.Rectangle):
         return Rectangle(patch)
 
-@total_ordering
 class Patch:
     """
     Representation of a matplotlib patch
@@ -186,11 +186,9 @@ class Patch:
             msg = f"Incorrect shape. Expected {self.patch_type}, got {other.patch_type}"
             return False, msg
         attrs = self.all_attrs if not attrs else attrs
-        if type(self) != type(other):
-            return False, "Incorrect patch type."
         for attr in set(attrs).intersection(self.all_attrs):
-            if getattr(self, attr) != getattr(other, attr):
-                msg = f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}."
+            if not math.isclose(getattr(self, attr), getattr(other, attr)):
+                msg = f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}. "
                 msg += f"Expected {getattr(self, attr)}"
                 return False, msg
         return True, None
@@ -198,7 +196,7 @@ class Patch:
     def assert_similar(self, other, attrs=None):
         attrs = self.all_attrs if not attrs else attrs
         # first, check if the type of the patches are the same
-        similar, msg = self.check_similar(other)
+        similar, msg = self.check_similar(other, attrs)
         if not similar:
             raise AssertionError(msg)
 
@@ -210,43 +208,48 @@ class Patch:
         for attr in self.all_attrs:
             if getattr(self, attr) > getattr(other, attr):
                 return True
+            elif getattr(self, attr) < getattr(other, attr):
+                return False
         return False
 
+
+@total_ordering
 class Rectangle(Patch):
     """
     Representation of a matplotlib Rectangle patch
     """
     patch_type = "rectangle"
-    all_attrs = ("height", "width", "position")
+    all_attrs = ("height", "width", "position_x", "position_y")
 
     def __init__(self, rectangle):
         if isinstance(rectangle, dict):
             self.height = rectangle.get("height")
             self.width = rectangle.get("width")
-            self.position = rectangel.get("position")
+            self.position_x, self.position_y = rectangle.get("position_x"), rectangle.get("position_y")
         else:
             self.height = rectangle.get_height()
             self.width = rectangle.get_width()
-            self.position = rectangle.get_xy()
+            self.position_x, self.position_y = rectangle.get_xy()
 
+@total_ordering
 class Wedge(Patch):
     """
     Representation of a matplotlib Wedge patch
     """
     patch_type = "wedge"
-    all_attrs = ("r", "theta1", "theta2", "center", "theta")
+    all_attrs = ("theta", "r", "theta1", "theta2", "center_x", "center_y")
     def __init__(self, wedge):
         if isinstance(wedge, dict):
             self.r = wedge.get("r")
             self.theta1 = wedge.get("theta1")
             self.theta2 = wedge.get("theta2")
-            self.center = wedge.get("center")
+            self.center_x, self.center_y = wedge.get("center_x"), wedge.get("center_y")
             self.theta = abs(self.theta1 - self.theta2)
         else:
             self.r = wedge.r
             self.theta1 = wedge.theta1
             self.theta2 = wedge.theta2
-            self.center = wedge.center
+            self.center_x, self.center_y = wedge.center
             self.theta = abs(wedge.theta1 - wedge.theta2)
 
 
@@ -284,10 +287,16 @@ class PathCollection:
     def __gt__(self, other):
         if self.marker.vertices.tolist() > other.marker.vertices.tolist():
             return True
+        if self.marker.vertices.tolist() < other.marker.vertices.tolist():
+            return False
         if list(self.x_data) > list(other.x_data):
             return True
+        if list(self.x_data) < list(other.x_data):
+            return False
         if list(self.y_data) > list(other.y_data):
             return True
+        if list(self.y_data) < list(other.y_data):
+            return False
         return False
 
     def check_similar(self, other, attrs=None):
@@ -362,14 +371,24 @@ class Line:
     def __gt__(self, other):
         if self.linewidth > other.linewidth:
             return True
+        if self.linewidth < other.linewidth:
+            return False
         if self.linestyle > other.linestyle:
             return True
+        if self.linestyle < other.linestyle:
+            return False
         if (self.marker is not None) and (other.marker is not None) and (self.marker > other.marker):
             return True
+        if (self.marker is not None) and (other.marker is not None) and (self.marker < other.marker):
+            return False
         if list(self.x_data) > list(other.x_data):
             return True
+        if list(self.x_data) < list(other.x_data):
+            return False
         if list(self.y_data) > list(other.y_data):
             return True
+        if list(self.y_data) < list(other.y_data):
+            return False
         return False
 
     def check_similar(self, other, attrs=None):
@@ -424,4 +443,3 @@ def check_text_equal(text, ref_text):
     if text.get_text() != ref_text.get_text():
         return False
     return True
-
