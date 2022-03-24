@@ -21,6 +21,7 @@ def assert_similar_figures(ref_fig, other_fig, attrs=None):
 
 class Figure:
     """Representation of a matplotlib figure object"""
+    all_attrs = ("suptitle",)
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
@@ -44,8 +45,7 @@ class Figure:
                                  f"Expected {other.get_num_axes()}, "
                                  f"found {self.get_num_axes()}")
 
-        figure_attrs = self.__dict__.keys()
-        for attr in set(figure_attrs).intersection(attrs):
+        for attr in set(self.all_attrs).intersection(attrs):
             if getattr(self, attr) != getattr(other, attr):
                 raise AssertionError(f"Incorrect {attr}. "
                                      f"Expected {getattr(other, attr)}, "
