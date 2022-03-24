@@ -3,7 +3,7 @@ import matplotlib
 from functools import total_ordering
 import math
 
-def assert_similar_figures(ref_fig, other_fig, attrs=("x_data", "y_data")):
+def assert_similar_figures(ref_fig, other_fig, attrs=None):
     """
     Assert that two figures are similar.
 
