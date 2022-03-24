@@ -1,5 +1,5 @@
 # matplotlib-figure-testing
-Test that two matplotlib figures are similar
+Test that two matplotlib figures are similar, in the sense that a list of attributes of the figures are the same.
 
 ## Usage
 To use these tests, you need only import one function:
@@ -27,11 +27,13 @@ Where `attrs` is a tuple of attributes you would like to compare. Possible entri
 * `"marker"`
 * `"width"` (for rectangle patches)
 * `"height"` (for rectangle patches)
-* `"position"` (for rectnagle patches)
+* `"position_x"` (for rectangle patches)
+* `"position_y"` (for rectangle patches)
 * `"theta1"` (for wedge patches)
 * `"theta2"` (for wedge patches)
 * `"theta"` (for wedge patches)
-* `"center"` (for wedge patches)
+* `"center_x"` (for wedge patches)
+* `"center_y"` (for wedge patches)
 * `"r"` (for wedge patches)
 
 If a provided attribute doesn't make sense for the particular object being compared, it will be ignored. If `attrs` is not provided, all the relevent attributes will be tested.
