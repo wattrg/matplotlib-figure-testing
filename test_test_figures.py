@@ -105,14 +105,28 @@ def plot_data(data1, data2):
 def test_capture_different_figs():
     data = [[1,2,3,4], [2,3,4,5]]
     data2 = [[2,3,4,5], [5,6,7,8]]
+
+    fig1_ref, ax1_ref = plt.subplots()
+    ax1_ref.plot(data[0], data[1])
+
+    fig2_ref, ax2_ref = plt.subplots()
+    ax2_ref.plot(data2[0], data2[1])
     fig1, fig2 = capture_figures(plot_data, data, data2) 
     assert_similar_figures(fig1, fig2, ("x_data", "y_data"))
 
 @register_test()
 def test_capture_same_figs():
     data = [[1,2,3,4], [2,3,4,5]]
+
+    fig1_ref, ax1_ref = plt.subplots()
+    ax1_ref.plot(data[0], data[1])
+
+    fig2_ref, ax2_ref = plt.subplots()
+    ax2_ref.plot(data[0], data[1])
+
     fig1, fig2 = capture_figures(plot_data, data, data) 
-    assert_similar_figures(fig1, fig2, ("x_data", "y_data"))
+    assert_similar_figures(fig1, fig1_ref, ("x_data", "y_data"))
+    assert_similar_figures(fig2, fig2_ref, ("x_data", "y_data"))
 
 if __name__ == "__main__":
     run_tests()

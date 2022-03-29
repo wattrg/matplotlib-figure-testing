@@ -34,6 +34,9 @@ def capture_figures(func, *args, **kwargs):
 
     Side-effects: Any existing figures will be closed
     """
+    # Keep track of the original figures
+    original_figs = _pylab_helpers.Gcf.figs
+
     # determine if matplotlib is in interactive mode
     interactive = matplotlib.is_interactive()
 
@@ -57,6 +60,10 @@ def capture_figures(func, *args, **kwargs):
     # restore interactive mode to its original state
     if not interactive:
         plt.ioff()
+
+    # reset the figure manager to its original state, as if we
+    # were never here
+    _pylab_helpers.Gcf.figs = original_figs
 
     # we're done!
     return tuple(figs)
