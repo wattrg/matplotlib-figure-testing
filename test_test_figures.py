@@ -147,7 +147,6 @@ def test_capture_figs_sideeffects():
     data = [[1,2,3,4], [2,3,4,5]]
     capture_figures(plot_data, data, data)
     final_num_figs = len(plt.get_fignums())
-    print(original_num_figs, final_num_figs)
     assert(final_num_figs == original_num_figs)
 
 if __name__ == "__main__":
