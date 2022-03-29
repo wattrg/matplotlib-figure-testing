@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt, _pylab_helpers
 from functools import total_ordering
 import math
 
+
 def assert_similar_figures(ref_fig, other_fig, attrs=None):
     """
     Assert that two figures are similar.
@@ -33,12 +34,31 @@ def capture_figures(func, *args, **kwargs):
 
     Side-effects: Any existing figures will be closed
     """
+    # determine if matplotlib is in interactive mode
+    interactive = matplotlib.is_interactive()
+
+    # Turning interactive mode on means plt.show() is non-blocking,
+    # and won't clear the active figures on calling plt.show()
+    if not interactive:
+        plt.ion()
+
+    # close existing figures, so that we don't get confused by them
     plt.close("all")
+
+    # call the function which generates the figures
     func(*args, **kwargs)
+
+    # get handles to the figures
     fig_managers = _pylab_helpers.Gcf.get_all_fig_managers() 
     figs = []
     for fig_manager in fig_managers:
         figs.append(fig_manager.canvas.figure)
+
+    # restore interactive mode to its original state
+    if not interactive:
+        plt.ioff()
+
+    # we're done!
     return tuple(figs)
 
 class Figure:
