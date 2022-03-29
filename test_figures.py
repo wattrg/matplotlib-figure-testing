@@ -33,7 +33,7 @@ def capture_figures(func, *args, **kwargs):
         function
     """
     # Keep track of the original figures
-    original_figs = _pylab_helpers.Gcf.figs
+    original_figs = _pylab_helpers.Gcf.figs.copy()
 
     # determine if matplotlib is in interactive mode
     interactive = matplotlib.is_interactive()
