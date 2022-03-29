@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from test_figures import assert_similar_figures
+from test_figures import assert_similar_figures, capture_figures
 from test_test_figures_runner import run_tests, register_test
 
 @register_test()
@@ -91,6 +91,20 @@ def test_scatter_dissimilar():
     ax2.scatter([2,2,3,4], [7,4,2,6])
 
     assert_similar_figures(fig, fig2, ("x_data", "y_data", "marker"))
+
+def plot_data(data1, data2):
+    fig1, ax1 = plt.subplots()
+    ax1.plot(data1[0], data1[1])
+
+    fig2, ax2 = plt.subplots()
+    ax2.plot(data2[0], data2[1])
+
+@register_test(should_fail=True)
+def test_capture():
+    data = [[1,2,3,4], [2,3,4,5]]
+    data2 = [[2,3,4,5], [5,6,7,8]]
+    fig1, fig2 = capture_figures(plot_data, data, data2) 
+    assert_similar_figures(fig1, fig2, ("x_data", "y_data"))
 
 if __name__ == "__main__":
     run_tests()
