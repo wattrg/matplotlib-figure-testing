@@ -4,6 +4,7 @@ from test_test_figures_runner import run_tests, register_test
 
 @register_test()
 def test_line_plot_one_axes_same_plot():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.plot([1,2,3,4], [6,2,5,2])
     ax.plot([2,3,4,5], [7,4,1,2])
@@ -16,6 +17,7 @@ def test_line_plot_one_axes_same_plot():
 
 @register_test(should_fail=True)
 def test_line_plot_one_axes_dissimilar_plot():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.plot([1,2,3,4], [7,2,5,2])
     ax.plot([2,3,4,5], [7,4,1,2])
@@ -30,6 +32,7 @@ def test_line_plot_one_axes_dissimilar_plot():
 
 @register_test()
 def test_pie_similar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.pie([5, 6, 7, 8])
 
@@ -40,6 +43,7 @@ def test_pie_similar():
 
 @register_test(should_fail=True)
 def test_pie_dissimilar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.pie([5, 6, 7, 8])
 
@@ -50,6 +54,7 @@ def test_pie_dissimilar():
 
 @register_test()
 def test_bar_similar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.bar([1, 2, 3], [7, 6, 8])
 
@@ -60,6 +65,7 @@ def test_bar_similar():
 
 @register_test(should_fail=True)
 def test_bar_dissimilar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.bar([1, 2, 3], [5,8,1])
 
@@ -70,6 +76,7 @@ def test_bar_dissimilar():
 
 @register_test()
 def test_scatter_similar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.scatter([1,2,3,4], [7,4,2,6])
     ax.scatter([2,2,3,4], [8,4,2,6])
@@ -82,6 +89,7 @@ def test_scatter_similar():
 
 @register_test(should_fail=True)
 def test_scatter_dissimilar():
+    plt.close("all")
     fig, ax = plt.subplots()
     ax.scatter([1,2,3,4], [7,4,2,6])
     ax.scatter([2,2,3,4], [8,4,2,6])
@@ -103,6 +111,7 @@ def plot_data(data1, data2):
 
 @register_test(should_fail=True)
 def test_capture_different_figs():
+    plt.close("all")
     data = [[1,2,3,4], [2,3,4,5]]
     data2 = [[2,3,4,5], [5,6,7,8]]
 
@@ -117,6 +126,7 @@ def test_capture_different_figs():
 
 @register_test()
 def test_capture_same_figs():
+    plt.close("all")
     data = [[1,2,3,4], [2,3,4,5]]
     data2 = [[2,3,4,5], [5,6,7,8]]
 
@@ -130,5 +140,16 @@ def test_capture_same_figs():
     assert_similar_figures(fig1, fig1_ref, ("x_data", "y_data"))
     assert_similar_figures(fig2, fig2_ref, ("x_data", "y_data"))
 
+@register_test()
+def test_capture_figs_sideeffects():
+    plt.close("all")
+    original_num_figs = len(plt.get_fignums())
+    data = [[1,2,3,4], [2,3,4,5]]
+    capture_figures(plot_data, data, data)
+    final_num_figs = len(plt.get_fignums())
+    print(original_num_figs, final_num_figs)
+    assert(final_num_figs == original_num_figs)
+
 if __name__ == "__main__":
+    plt.ion()
     run_tests()
