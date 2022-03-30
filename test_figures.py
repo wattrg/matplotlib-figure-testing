@@ -113,8 +113,11 @@ class Axis:
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
             self.title = ax.get("title")
+            self.has_title = ax.get("title")
             self.xlabel = ax.get("xlabel")
+            self.has_xlabel = ax.get("has_xlabel", False)
             self.ylabel = ax.get("ylabel")
+            self.has_ylabel = ax.get("has_ylabel", False)
             self.xtick_label = ax.get("xtick_label")
             self.ytick_label = ax.get("ytick_label")
             self.x_scale = ax.get("x_scale")
@@ -130,8 +133,11 @@ class Axis:
         else:
             # we need to create an axis from a matplotlib axis
             self.title = ax.get_title()
+            self.has_title = False if self.title == "" else True
             self.xlabel = ax.get_xaxis().get_label().get_text()
+            self.has_xlabel = False if self.xlabel == "" else True
             self.ylabel = ax.get_yaxis().get_label().get_text()
+            self.has_ylabel = False if self.ylabel == "" else True
             self.xtick_label = ax.get_xaxis().get_ticklabels()
             self.ytick_label = ax.get_yaxis().get_ticklabels()
             self.x_scale = ax.get_xscale()
@@ -161,8 +167,11 @@ class Axis:
     def __repr__(self):
         rep = "{\n"
         rep += f'        "title": "{self.title}", \n'
+        rep += f'        "has_title": {self.has_title}, \,'
         rep += f'        "xlabel": "{self.xlabel}", \n'
+        rep += f'        "has_xlabel": {self.has_xlabel}, \n'
         rep += f'        "ylabel": "{self.ylabel}", \n'
+        rep += f'        "has_ylabel": {self.has_ylabel}, \n'
         rep += f'        "xtick_label": {self.xtick_label}, \n'
         if self.ytick_label:
             rep += f'        "ytick_label": {self.ytick_label}, \n'
