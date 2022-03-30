@@ -143,6 +143,7 @@ def test_capture_same_figs():
 @register_test()
 def test_capture_figs_sideeffects():
     plt.close("all")
+    fig, ax = plt.subplots()
     original_num_figs = len(plt.get_fignums())
     data = [[1,2,3,4], [2,3,4,5]]
     capture_figures(plot_data, data, data)
