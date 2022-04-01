@@ -87,16 +87,16 @@ class Figure:
         """Returns the number of axes in the figure"""
         return len(self.axes)
 
-    def assert_similar(self, other, attrs):
+    def assert_similar(self, other, attrs=None):
         """Assert that the Figure is similar to another figure"""
 
-        attrs = self.all_attrs if not attrs else attrs
+        test_attrs = self.all_attrs if not attrs else attrs
         if self.get_num_axes() != other.get_num_axes():
             raise AssertionError(f"Incorrect number of axes (subfigures). "
                                  f"Expected {other.get_num_axes()}, "
                                  f"found {self.get_num_axes()}")
 
-        for attr in set(self.all_attrs).intersection(attrs):
+        for attr in set(self.all_attrs).intersection(test_attrs):
             if getattr(self, attr) != getattr(other, attr):
                 raise AssertionError(f"Incorrect {attr}. "
                                      f"Expected {getattr(other, attr)}, "
@@ -124,7 +124,7 @@ class Axis:
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
             self.title = ax.get("title")
-            self.has_title = ax.get("title")
+            self.has_title = ax.get("has_title")
             self.xlabel = ax.get("xlabel")
             self.has_xlabel = ax.get("has_xlabel", False)
             self.ylabel = ax.get("ylabel")
@@ -201,7 +201,7 @@ class Axis:
 
     def assert_similar(self, other, attrs=None):
         """Assert that the axis is similar to another axis"""
-        attrs = self.all_attrs if not attrs else attrs
+        test_attrs = self.all_attrs if not attrs else attrs
         if self.get_num_lines() != other.get_num_lines():
             raise AssertionError(f"Incorrect number of lines. "
                                  f"Expected {other.get_num_lines()}, "
@@ -212,7 +212,7 @@ class Axis:
                                  f"scatter plot. Expected {other.get_num_pc()} "
                                  f"found {self.get_num_pc()}")
         # test all the attributes that relate to an axes
-        for attr in set(attrs).intersection(self.all_attrs):
+        for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ["xtick_label", "ytick_label", "legend_entries"]:
                 # It seems that matplotlib.text.Text doesn't implement __eq__
                 # so here we are doing matplotlib's job for them...
@@ -251,11 +251,12 @@ class Patch:
     Representation of a matplotlib patch
     """
     def check_similar(self, other, attrs=None):
+        test_attrs = self.all_attrs if not attrs else attrs
         if self.patch_type != other.patch_type:
             msg = f"Incorrect shape. Expected {self.patch_type}, got {other.patch_type}"
             return False, msg
-        attrs = self.all_attrs if not attrs else attrs
-        for attr in set(attrs).intersection(self.all_attrs):
+        test_attrs = self.all_attrs if not attrs else attrs
+        for attr in set(test_attrs).intersection(self.all_attrs):
             if not math.isclose(getattr(self, attr), getattr(other, attr)):
                 msg = f"Incorrect {self.patch_type} {attr}: {getattr(other, attr)}. "
                 msg += f"Expected {getattr(self, attr)}"
@@ -263,9 +264,8 @@ class Patch:
         return True, None
 
     def assert_similar(self, other, attrs=None):
-        attrs = self.all_attrs if not attrs else attrs
-        # first, check if the type of the patches are the same
-        similar, msg = self.check_similar(other, attrs)
+        test_attrs = self.all_attrs if not attrs else attrs
+        similar, msg = self.check_similar(other, test_attrs)
         if not similar:
             raise AssertionError(msg)
 
@@ -391,8 +391,8 @@ class PathCollection:
 
     def check_similar(self, other, attrs=None):
         """ Check if two PathCollections are similar """
-        attrs = self.all_attrs if not attrs else attrs
-        for attr in set(attrs).intersection(self.all_attrs):
+        test_attrs = self.all_attrs if not attrs else attrs
+        for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ("x_data", "y_data"):
                 try:
                     data_correct = np.allclose(getattr(self, attr),
@@ -420,8 +420,8 @@ class PathCollection:
 
     def assert_similar(self, other, attrs=None):
         """ Assert two PathCollections are similar """
-        attrs = self.all_attrs if not attrs else attrs
-        similar, msg = self.check_similar(other, attrs)
+        test_attrs = self.all_attrs if not attrs else attrs
+        similar, msg = self.check_similar(other, test_attrs)
         if not similar:
             raise AssertionError(msg)
 
@@ -484,10 +484,9 @@ class Line:
     def check_similar(self, other, attrs=None):
         """ Check if two lines are similar """
 
-        attrs = self.all_attrs if not attrs else attrs
+        test_attrs = self.all_attrs if not attrs else attrs
         # test all the attributes that relate to a line
-        line_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(line_attrs):
+        for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ("x_data", "y_data"):
                 # we have numeric data, so should test if close
                 # use a try except block to catch when allclose errors
@@ -514,8 +513,8 @@ class Line:
     def assert_similar(self, other, attrs=None):
         """Assert that the line is similar to another line"""
 
-        attrs = self.all_attrs if not attrs else attrs
-        similar, msg = self.check_similar(other, attrs)
+        test_attrs = self.all_attrs if not attrs else attrs
+        similar, msg = self.check_similar(other, test_attrs)
         if not similar:
             raise AssertionError(msg)
 
