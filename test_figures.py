@@ -107,8 +107,6 @@ class Figure:
 
     def __repr__(self):
         axis_repr = repr(list([axis for axis in self.axes]))
-        rep = "from test_figures import *\n"
-        rep += "from matplotlib.text import Text\n"
         rep += "Figure({\n"
         rep += f'    "suptitle": "{self.suptitle}", \n'
         rep += f'    "axes": {axis_repr}\n'
@@ -532,11 +530,3 @@ def check_text_equal(text, ref_text):
     if text.get_text() != ref_text.get_text():
         return False
     return True
-
-
-if __name__ == "__main__":
-    fig, ax = plt.subplots()
-    ax.hist([1, 1, 1 ,2, 2, 3, 4, 5, 5, 5, 5, 6, 6, 7])
-    test_fig = Figure(fig)
-    print(test_fig)
-    plt.show()
