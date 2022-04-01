@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from test_figures import assert_similar_figures, capture_figures
+from test_figures import assert_similar_figures, capture_figures, Figure
 from test_test_figures_runner import run_tests, register_test
 
 @register_test()
@@ -149,6 +149,16 @@ def test_capture_figs_sideeffects():
     capture_figures(plot_data, data, data)
     final_num_figs = len(plt.get_fignums())
     assert(final_num_figs == original_num_figs)
+
+@register_test()
+def test_repr():
+    plt.close("all")
+    from test_data.test_figure_repr import test_hist
+    fig, ax = plt.subplots()
+    ax.hist([1, 1, 1 ,2, 2, 3, 4, 5, 5, 5, 5, 6, 6, 7])
+    assert_similar_figures(test_hist, fig)
+
+
 
 if __name__ == "__main__":
     plt.ion()

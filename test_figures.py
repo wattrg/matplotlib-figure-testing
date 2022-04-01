@@ -16,8 +16,10 @@ def assert_similar_figures(ref_fig, other_fig, attrs=None):
     Raises:
         AssertionError if the figures are dissimilar
     """
-    ref_fig = Figure(ref_fig)
-    other_fig = Figure(other_fig)
+    if not isinstance(ref_fig, Figure):
+        ref_fig = Figure(ref_fig)
+    if not isinstance(other_fig, Figure):
+        other_fig = Figure(other_fig)
     ref_fig.assert_similar(other_fig, attrs)
 
 def capture_figures(func, *args, **kwargs):
@@ -72,9 +74,9 @@ class Figure:
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
-            self.axes = [Axis(axis) for axis in fig["axes"]]
+            self.axes = [axis for axis in fig["axes"]]
         else:
-            sup_title = fig._suptitle
+            sup_title = None #fig._suptitle
             if sup_title:
                 self.suptitle = fig._suptitle.get_text()
             else:
@@ -87,6 +89,8 @@ class Figure:
 
     def assert_similar(self, other, attrs):
         """Assert that the Figure is similar to another figure"""
+
+        attrs = self.all_attrs if not attrs else attrs
         if self.get_num_axes() != other.get_num_axes():
             raise AssertionError(f"Incorrect number of axes (subfigures). "
                                  f"Expected {other.get_num_axes()}, "
@@ -102,13 +106,20 @@ class Figure:
             axis.assert_similar(other_axis, attrs)
 
     def __repr__(self):
-        axis_repr = repr(list([{axis} for axis in self.axes]))
+        axis_repr = repr(list([axis for axis in self.axes]))
+        rep = "from test_figures import *\n"
+        rep += "from matplotlib.text import Text\n"
+        rep += "Figure({\n"
         rep += f'    "suptitle": "{self.suptitle}", \n'
-        rep += f'    "axes": {axis_repr}'
+        rep += f'    "axes": {axis_repr}\n'
+        rep += "})"
         return rep
 
 class Axis:
     """Representation of a matplotlib axes object"""
+    all_attrs = ("title", "has_title", "xlabel", "has_xlabel", "ylabel", "has_ylabel",
+                 "xtick_label", "ytick_label", "x_scale", "y_scale", "legend_entries",
+                 "grid_spec")
     def __init__(self, ax):
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
@@ -129,7 +140,7 @@ class Axis:
             self.lines = sorted([Line(line) for line in ax.get("lines")])
             self.path_collections = sorted([PathCollection(pc)
                                      for pc in ax.get("path_collections", [])])
-            self.patches = sorted([Wedge(wedge) for wedge in ax.get("wedges", [])])
+            self.patches = sorted([patch for patch in ax.get("patches", [])])
         else:
             # we need to create an axis from a matplotlib axis
             self.title = ax.get_title()
@@ -165,9 +176,9 @@ class Axis:
         return len(self.lines)
 
     def __repr__(self):
-        rep = "{\n"
+        rep = "Axis({\n"
         rep += f'        "title": "{self.title}", \n'
-        rep += f'        "has_title": {self.has_title}, \,'
+        rep += f'        "has_title": {self.has_title}, \n'
         rep += f'        "xlabel": "{self.xlabel}", \n'
         rep += f'        "has_xlabel": {self.has_xlabel}, \n'
         rep += f'        "ylabel": "{self.ylabel}", \n'
@@ -180,14 +191,17 @@ class Axis:
         rep += f'        "legend_entries": {repr(self.legend_entries)}, \n'
         rep += f'        "grid_spec": {self.grid_spec}, \n'
         lines_repr = repr([{line} for line in self.lines])
-        rep += '        "lines": ' + f"{lines_repr},\n    "
+        rep += '        "lines": ' + f"{lines_repr},\n"
         pc_repr = repr([{pc} for pc in self.path_collections])
-        rep += f'        "path_collections": {pc_repr}\n '
-        rep += "}"
+        rep += f'        "path_collections": {pc_repr},\n'
+        patch_repr = repr([patch for patch in self.patches])
+        rep += f'        "patches": {patch_repr},\n'
+        rep += "    }),\n"
         return rep
 
-    def assert_similar(self, other, attrs):
+    def assert_similar(self, other, attrs=None):
         """Assert that the axis is similar to another axis"""
+        attrs = self.all_attrs if not attrs else attrs
         if self.get_num_lines() != other.get_num_lines():
             raise AssertionError(f"Incorrect number of lines. "
                                  f"Expected {other.get_num_lines()}, "
@@ -198,8 +212,7 @@ class Axis:
                                  f"scatter plot. Expected {other.get_num_pc()} "
                                  f"found {self.get_num_pc()}")
         # test all the attributes that relate to an axes
-        axis_attrs = self.__dict__.keys()
-        for attr in set(attrs).intersection(axis_attrs):
+        for attr in set(attrs).intersection(self.all_attrs):
             if attr in ["xtick_label", "ytick_label", "legend_entries"]:
                 # It seems that matplotlib.text.Text doesn't implement __eq__
                 # so here we are doing matplotlib's job for them...
@@ -287,6 +300,15 @@ class Rectangle(Patch):
             self.width = rectangle.get_width()
             self.position_x, self.position_y = rectangle.get_xy()
 
+    def __repr__(self):
+        rep = "Rectangle({"
+        rep += f"'height': {self.height}, "
+        rep += f"'width': {self.width}, "
+        rep += f"'position_x': {self.position_x}, "
+        rep += f"'position_y': {self.position_y}, "
+        rep += "})"
+        return rep
+
 @total_ordering
 class Wedge(Patch):
     """
@@ -294,6 +316,7 @@ class Wedge(Patch):
     """
     patch_type = "wedge"
     all_attrs = ("theta", "r", "theta1", "theta2", "center_x", "center_y")
+
     def __init__(self, wedge):
         if isinstance(wedge, dict):
             self.r = wedge.get("r")
@@ -307,6 +330,17 @@ class Wedge(Patch):
             self.theta2 = wedge.theta2
             self.center_x, self.center_y = wedge.center
             self.theta = abs(wedge.theta1 - wedge.theta2)
+
+    def __repr__(self):
+        rep = "Wedge({"
+        rep += f"'r': {self.r}, "
+        rep += f"'theta1': {self.theta1}, "
+        rep += f"'theta2': {self.theta2}, "
+        rep += f"'theta': {self.theta}, "
+        rep += f"'center_x': {self.center_x}, "
+        rep += f"'center_y': {self.center_y}"
+        rep += "})"
+        return rep
 
 
 @total_ordering
@@ -500,3 +534,10 @@ def check_text_equal(text, ref_text):
         return False
     return True
 
+
+if __name__ == "__main__":
+    fig, ax = plt.subplots()
+    ax.hist([1, 1, 1 ,2, 2, 3, 4, 5, 5, 5, 5, 6, 6, 7])
+    test_fig = Figure(fig)
+    print(test_fig)
+    plt.show()
