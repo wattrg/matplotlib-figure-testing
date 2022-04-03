@@ -76,7 +76,7 @@ class Figure:
             self.suptitle = fig.get("suptitle")
             self.axes = [axis for axis in fig["axes"]]
         else:
-            sup_title = None #fig._suptitle
+            sup_title = fig._suptitle
             if sup_title:
                 self.suptitle = fig._suptitle.get_text()
             else:
