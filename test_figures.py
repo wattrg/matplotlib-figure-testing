@@ -219,8 +219,8 @@ class Axis:
 
         if self.get_num_pc() != other.get_num_pc():
             raise AssertionError(f"Incorrect number of items in the"
-                                 f"scatter plot. Expected {other.get_num_pc()} "
-                                 f"found {self.get_num_pc()}")
+                                 f"scatter plot. Expected {self.get_num_pc()} "
+                                 f"found {other.get_num_pc()}")
         # test all the attributes that relate to an axes
         for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ["xtick_label", "ytick_label", "legend_entries"]:
@@ -230,8 +230,8 @@ class Axis:
                                           getattr(other, attr)):
                     if not check_text_equal(text, text_ref):
                         raise AssertionError(f"Incorrect {attr}: "
-                                             f"'{getattr(self, attr)}', "
-                                             f"Expected '{getattr(other, attr)}'")
+                                             f"'{getattr(other, attr)}', "
+                                             f"Expected '{getattr(self, attr)}'")
 
             elif getattr(self, attr) != getattr(other, attr):
                 raise AssertionError(f"Incorrect {attr}, "
