@@ -435,6 +435,21 @@ class PathCollection:
         if not similar:
             raise AssertionError(msg)
 
+def numpy_array_gt(array1, array2):
+    for i, j in zip(array1, array2):
+        if i > j:
+            return True
+        if i < j:
+            return False
+    return False
+
+def numpy_array_lt(array1, array2):
+    for i, j in zip(array1, array2):
+        if i < j:
+            return True
+        if i > j:
+            return False
+    return False
 
 @total_ordering
 class Line:
@@ -446,11 +461,11 @@ class Line:
             # we need to create a line from a dictionary
             self.x_data = line.get("x_data")
             self.y_data = line.get("y_data")
-            self.linewidth = line.get("linewidth")
-            self.linestyle = line.get("linestyle")
-            self.marker = line.get("marker")
-            self.colour = line.get("colour")
-            self.label = line.get("label")
+            self.linewidth = line.get("linewidth", 1.5)
+            self.linestyle = line.get("linestyle", "")
+            self.marker = line.get("marker", "")
+            self.colour = line.get("colour", "")
+            self.label = line.get("label", "")
         else:
             # we probably have a matplotlib figure
             self.x_data = line.get_xdata()
@@ -483,6 +498,14 @@ class Line:
         return similar
 
     def __gt__(self, other):
+        if numpy_array_gt(self.x_data, other.x_data):
+            return True
+        if numpy_array_lt(self.x_data, other.x_data):
+            return False
+        if numpy_array_gt(self.y_data, other.y_data):
+            return True
+        if numpy_array_lt(self.y_data, other.y_data):
+            return False
         if self.label > other.label:
             return True
         if self.label < other.label:
@@ -502,14 +525,6 @@ class Line:
         if (self.marker is not None) and (other.marker is not None) and (self.marker > other.marker):
             return True
         if (self.marker is not None) and (other.marker is not None) and (self.marker < other.marker):
-            return False
-        if list(self.x_data) > list(other.x_data):
-            return True
-        if list(self.x_data) < list(other.x_data):
-            return False
-        if list(self.y_data) > list(other.y_data):
-            return True
-        if list(self.y_data) < list(other.y_data):
             return False
         return False
 
