@@ -3,6 +3,7 @@ import matplotlib
 from matplotlib import pyplot as plt, _pylab_helpers
 from functools import total_ordering
 import math
+import re
 
 
 def assert_similar_figures(ref_fig, other_fig, attrs=None):
@@ -438,7 +439,8 @@ class PathCollection:
 @total_ordering
 class Line:
     """Representation of a matplotlib line object"""
-    all_attrs = ("x_data", "y_data", "linewidth", "linestyle", "marker")
+    all_attrs = ("x_data", "y_data", "linewidth",
+                 "linestyle", "marker", "colour", "label")
     def __init__(self, line):
         if isinstance(line, dict):
             # we need to create a line from a dictionary
@@ -448,6 +450,7 @@ class Line:
             self.linestyle = line.get("linestyle")
             self.marker = line.get("marker")
             self.colour = line.get("colour")
+            self.label = line.get("label")
         else:
             # we probably have a matplotlib figure
             self.x_data = line.get_xdata()
@@ -456,6 +459,12 @@ class Line:
             self.linestyle = line.get_linestyle()
             self.marker = line.get_marker()
             self.colour = line.get_color()
+            self.label = line.get_label()
+            # the default label seems to be _child0, _child1,...
+            # so if the label matches that pattern,
+            # set the label to an empty string
+            if re.match(r"^_child[0-9]+$", self.label):
+                self.label = ""
 
     def __repr__(self):
         rep = "Line({\n"
@@ -465,6 +474,7 @@ class Line:
         rep += f'            "linestyle": "{self.linestyle}", \n'
         rep += f'            "marker": "{self.marker}", \n        '
         rep += f'            "colour": "{self.colour}",\n'
+        rep += f'            "label": "{self.label}",\n'
         rep += "        })"
         return rep
 
@@ -473,6 +483,10 @@ class Line:
         return similar
 
     def __gt__(self, other):
+        if self.label > other.label:
+            return True
+        if self.label < other.label:
+            return False
         if self.colour > other.colour:
             return True
         if self.colour < other.colour:
@@ -516,7 +530,11 @@ class Line:
                     data_correct = False
 
                 if not data_correct:
-                    msg  = f"A line isn't where it should be\n"
+                    msg  = f"A line (colour='{self.colour}', "
+                    msg += f"label='{self.label}', "
+                    msg += f"linestyle='{self.linestyle}', "
+                    msg += f"linewidth={self.linewidth}) "
+                    msg +=  "isn't where it should be\n"
                     msg += f"Expected {attr}: {getattr(self, attr)}\n"
                     msg += f"But got {getattr(other, attr)}\n"
                     return False, msg

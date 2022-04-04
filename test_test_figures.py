@@ -7,12 +7,12 @@ from test_data.test_figure_repr import test_hist
 def test_line_plot_one_axes_same_plot():
     plt.close("all")
     fig, ax = plt.subplots()
-    ax.plot([1,2,3,4], [6,2,5,2])
-    ax.plot([2,3,4,5], [7,4,1,2])
+    ax.plot([1,2,3,4], [6,2,5,2], c='r')
+    ax.plot([2,3,4,5], [7,4,1,2], c='k')
 
     fig2, ax2 = plt.subplots()
-    ax2.plot([2,3,4,5], [7,4,1,2])
-    ax2.plot([1,2,3,4], [6,2,5,2])
+    ax2.plot([2,3,4,5], [7,4,1,2], c='k')
+    ax2.plot([1,2,3,4], [6,2,5,2], c='r')
 
     assert_similar_figures(fig, fig2)
 
