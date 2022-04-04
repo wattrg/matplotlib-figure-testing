@@ -70,17 +70,20 @@ def capture_figures(func, *args, **kwargs):
 
 class Figure:
     """Representation of a matplotlib figure object"""
-    all_attrs = ("suptitle",)
+    all_attrs = ("suptitle", "has_suptitle")
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
+            self.has_suptitle = fig.get("has_suptitle")
             self.axes = [axis for axis in fig["axes"]]
         else:
             sup_title = fig._suptitle
             if sup_title:
                 self.suptitle = fig._suptitle.get_text()
+                self.has_suptitle = True
             else:
                 self.suptitle = ""
+                self.has_suptitle = False
             self.axes = [Axis(axis) for axis in fig.get_axes()]
 
     def get_num_axes(self):
@@ -107,11 +110,19 @@ class Figure:
 
     def __repr__(self):
         axis_repr = repr(list([axis for axis in self.axes]))
-        rep += "Figure({\n"
+        rep = "Figure({\n"
         rep += f'    "suptitle": "{self.suptitle}", \n'
+        rep += f'    "has_suptitle": {self.has_suptitle},\n'
         rep += f'    "axes": {axis_repr}\n'
         rep += "})"
         return rep
+
+    def write_to_file(self, var_name, filename):
+        """ Writes a figure object to a file """
+        with open(filename, "w") as f:
+            f.write("from matplotlib_figure_testing.test_figures import *\n")
+            f.write("from matplotlib.text import Text\n")
+            f.write(f"{var_name} = {repr(self)}")
 
 class Axis:
     """Representation of a matplotlib axes object"""
@@ -135,7 +146,7 @@ class Axis:
             self.grid_spec = ax.get("grid_spec")
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
-            self.lines = sorted([Line(line) for line in ax.get("lines")])
+            self.lines = sorted([line for line in ax.get("lines")])
             self.path_collections = sorted([PathCollection(pc)
                                      for pc in ax.get("path_collections", [])])
             self.patches = sorted([patch for patch in ax.get("patches", [])])
@@ -188,7 +199,7 @@ class Axis:
         rep += f'        "y_scale": "{self.y_scale}", \n'
         rep += f'        "legend_entries": {repr(self.legend_entries)}, \n'
         rep += f'        "grid_spec": {self.grid_spec}, \n'
-        lines_repr = repr([{line} for line in self.lines])
+        lines_repr = repr([line for line in self.lines])
         rep += '        "lines": ' + f"{lines_repr},\n"
         pc_repr = repr([{pc} for pc in self.path_collections])
         rep += f'        "path_collections": {pc_repr},\n'
@@ -202,8 +213,8 @@ class Axis:
         test_attrs = self.all_attrs if not attrs else attrs
         if self.get_num_lines() != other.get_num_lines():
             raise AssertionError(f"Incorrect number of lines. "
-                                 f"Expected {other.get_num_lines()}, "
-                                 f"found {self.get_num_lines()}")
+                                 f"Expected {self.get_num_lines()}, "
+                                 f"found {other.get_num_lines()}")
 
         if self.get_num_pc() != other.get_num_pc():
             raise AssertionError(f"Incorrect number of items in the"
@@ -445,11 +456,13 @@ class Line:
             self.marker = line.get_marker()
 
     def __repr__(self):
-        rep = f'\n            "x_data": np.{repr(self.x_data)}, \n'
+        rep = "Line({\n"
+        rep += f'            "x_data": np.{repr(self.x_data)}, \n'
         rep += f'            "y_data": np.{repr(self.y_data)}, \n'
         rep += f'            "linewidth": {self.linewidth}, \n'
         rep += f'            "linestyle": "{self.linestyle}", \n'
         rep += f'            "marker": "{self.marker}", \n        '
+        rep += "        })"
         return rep
 
     def __eq__(self, other):
