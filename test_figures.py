@@ -123,13 +123,13 @@ class Figure:
         with open(filename, "w") as f:
             f.write("from matplotlib_figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
-            f.write(f"{var_name} = {repr(self)}")
+            f.write(f"{var_name} = {self}")
 
 class Axis:
     """Representation of a matplotlib axes object"""
     all_attrs = ("title", "has_title", "xlabel", "has_xlabel", "ylabel", "has_ylabel",
                  "xtick_label", "ytick_label", "x_scale", "y_scale", "legend_entries",
-                 "grid_spec")
+                 "num_legend_entries", "grid_spec")
     def __init__(self, ax):
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
@@ -144,7 +144,7 @@ class Axis:
             self.x_scale = ax.get("x_scale")
             self.y_scale = ax.get("y_scale")
             self.legend_entries = ax.get("legend_entries")
-            self.has_legend = ax.get("has_legend")
+            self.num_legend_entries = ax.get("num_legend_entries")
             self.grid_spec = ax.get("grid_spec")
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
@@ -168,10 +168,10 @@ class Axis:
             if legend:
                 self.legend_entries = [entry for entry in
                                        ax.get_legend().get_texts()]
-                self.has_legend = True
+                self.num_legend_entries = len(self.legend_entries)
             else:
                 self.legend_entries = [None]
-                self.has_legend = False
+                self.num_legend_entries = 0
             self.grid_spec = ax.get_gridspec().get_geometry()
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
@@ -202,7 +202,7 @@ class Axis:
         rep += f'        "x_scale": "{self.x_scale}", \n'
         rep += f'        "y_scale": "{self.y_scale}", \n'
         rep += f'        "legend_entries": {repr(self.legend_entries)}, \n'
-        rep += f'        "has_legend": {self.has_legend},\n'
+        rep += f'        "num_legend_entries": {self.num_legend_entries},\n'
         rep += f'        "grid_spec": {self.grid_spec}, \n'
         lines_repr = repr([line for line in self.lines])
         rep += '        "lines": ' + f"{lines_repr},\n"
