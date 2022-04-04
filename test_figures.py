@@ -74,7 +74,7 @@ class Figure:
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
-            self.has_suptitle = fig.get("has_suptitle")
+            self.has_suptitle = fig.get("has_suptitle", False)
             self.axes = [axis for axis in fig["axes"]]
         else:
             sup_title = fig._suptitle
