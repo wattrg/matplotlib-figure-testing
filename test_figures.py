@@ -447,6 +447,7 @@ class Line:
             self.linewidth = line.get("linewidth")
             self.linestyle = line.get("linestyle")
             self.marker = line.get("marker")
+            self.colour = line.get("colour")
         else:
             # we probably have a matplotlib figure
             self.x_data = line.get_xdata()
@@ -454,6 +455,7 @@ class Line:
             self.linewidth = line.get_linewidth()
             self.linestyle = line.get_linestyle()
             self.marker = line.get_marker()
+            self.colour = line.get_color()
 
     def __repr__(self):
         rep = "Line({\n"
@@ -462,6 +464,7 @@ class Line:
         rep += f'            "linewidth": {self.linewidth}, \n'
         rep += f'            "linestyle": "{self.linestyle}", \n'
         rep += f'            "marker": "{self.marker}", \n        '
+        rep += f'            "colour": "{self.colour}",\n'
         rep += "        })"
         return rep
 
@@ -470,6 +473,10 @@ class Line:
         return similar
 
     def __gt__(self, other):
+        if self.colour > other.colour:
+            return True
+        if self.colour < other.colour:
+            return False
         if self.linewidth > other.linewidth:
             return True
         if self.linewidth < other.linewidth:
@@ -509,7 +516,7 @@ class Line:
                     data_correct = False
 
                 if not data_correct:
-                    msg = f"A line isn't where it should be\n"
+                    msg  = f"A line isn't where it should be\n"
                     msg += f"Expected {attr}: {getattr(self, attr)}\n"
                     msg += f"But got {getattr(other, attr)}\n"
                     return False, msg
