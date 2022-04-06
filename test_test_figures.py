@@ -32,6 +32,28 @@ def test_line_plot_one_axes_dissimilar_plot():
     assert_similar_figures(fig, fig2)
 
 @register_test()
+def test_line_style():
+    plt.close("all")
+    fig, ax = plt.subplots()
+    ax.plot([1,2,3,4], ls="-")
+
+    fig_ref, ax_ref = plt.subplots()
+    ax_ref.plot([1,2,3,4], ls="-")
+
+    assert_similar_figures(fig, fig_ref)
+
+@register_test(should_fail=True)
+def test_line_style():
+    plt.close("all")
+    fig, ax = plt.subplots()
+    ax.plot([1,2,3,4], ls="-")
+
+    fig_ref, ax_ref = plt.subplots()
+    ax_ref.plot([1,2,3,4], ls=":")
+
+    assert_similar_figures(fig, fig_ref)
+
+@register_test()
 def test_pie_similar():
     plt.close("all")
     fig, ax = plt.subplots()
