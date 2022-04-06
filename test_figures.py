@@ -477,7 +477,7 @@ class Line:
             self.linewidth = line.get_linewidth()
             self.linestyle = line.get_linestyle()
             self.marker = line.get_marker()
-            self.colour = line.get_color()
+            self.colour = matplotlib.colors.to_hex(line.get_color())
             self.label = line.get_label()
             # the default label seems to be _child0, _child1,...
             # so if the label matches that pattern,
@@ -560,8 +560,8 @@ class Line:
             else:
                 # we have non numeric data, so can test exactly
                 if getattr(self, attr) != getattr(other, attr):
-                    msg = f"Incorrect {attr}, '{getattr(self, attr)}'."
-                    msg += f"Expected '{getattr(other, attr)}'"
+                    msg = f"Incorrect {attr}, '{getattr(other, attr)}'."
+                    msg += f"Expected '{getattr(self, attr)}'"
                     return False, msg
         return True, None
 
