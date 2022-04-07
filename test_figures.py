@@ -129,7 +129,7 @@ class Axis:
     """Representation of a matplotlib axes object"""
     all_attrs = ("title", "has_title", "xlabel", "has_xlabel", "ylabel", "has_ylabel",
                  "xtick_label", "ytick_label", "x_scale", "y_scale", "legend_entries",
-                 "num_legend_entries", "grid_spec")
+                 "num_legend_entries", "has_legend", "grid_spec")
     def __init__(self, ax):
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
