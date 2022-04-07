@@ -145,6 +145,7 @@ class Axis:
             self.y_scale = ax.get("y_scale")
             self.legend_entries = ax.get("legend_entries")
             self.num_legend_entries = ax.get("num_legend_entries")
+            self.has_legend = ax.get("has_legend")
             self.grid_spec = ax.get("grid_spec")
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
@@ -169,9 +170,11 @@ class Axis:
                 self.legend_entries = [entry for entry in
                                        ax.get_legend().get_texts()]
                 self.num_legend_entries = len(self.legend_entries)
+                self.has_legend = True
             else:
                 self.legend_entries = [None]
                 self.num_legend_entries = 0
+                self.has_legend = False
             self.grid_spec = ax.get_gridspec().get_geometry()
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
@@ -188,6 +191,10 @@ class Axis:
         """Get the number of lines on the axis"""
         return len(self.lines)
 
+    def get_num_patches(self):
+        """Get the number of patches"""
+        return len(self.patches)
+
     def __repr__(self):
         rep = "Axis({\n"
         rep += f'        "title": "{self.title}", \n'
@@ -202,6 +209,7 @@ class Axis:
         rep += f'        "x_scale": "{self.x_scale}", \n'
         rep += f'        "y_scale": "{self.y_scale}", \n'
         rep += f'        "legend_entries": {repr(self.legend_entries)}, \n'
+        rep += f'        "has_legend": {self.has_legend}, \n'
         rep += f'        "num_legend_entries": {self.num_legend_entries},\n'
         rep += f'        "grid_spec": {self.grid_spec}, \n'
         lines_repr = repr([line for line in self.lines])
@@ -210,21 +218,13 @@ class Axis:
         rep += f'        "path_collections": {pc_repr},\n'
         patch_repr = repr([patch for patch in self.patches])
         rep += f'        "patches": {patch_repr},\n'
-        rep += "    }),\n"
+        rep += "    })\n"
         return rep
 
     def assert_similar(self, other, attrs=None):
         """Assert that the axis is similar to another axis"""
         test_attrs = self.all_attrs if not attrs else attrs
-        if self.get_num_lines() != other.get_num_lines():
-            raise AssertionError(f"Incorrect number of lines. "
-                                 f"Expected {self.get_num_lines()}, "
-                                 f"found {other.get_num_lines()}")
 
-        if self.get_num_pc() != other.get_num_pc():
-            raise AssertionError(f"Incorrect number of items in the"
-                                 f"scatter plot. Expected {self.get_num_pc()} "
-                                 f"found {other.get_num_pc()}")
         # test all the attributes that relate to an axes
         for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ["xtick_label", "ytick_label", "legend_entries"]:
@@ -243,14 +243,26 @@ class Axis:
                                      f"Expected '{getattr(self, attr)}'")
 
         # check that the lines are similar. The lines may be in a different order
+        if self.get_num_lines() != other.get_num_lines():
+            raise AssertionError(f"Incorrect number of lines. "
+                                 f"Expected {self.get_num_lines()}, "
+                                 f"found {other.get_num_lines()}")
         for line, other_line in zip(self.lines, other.lines):
             line.assert_similar(other_line, attrs)
 
         # check that the path collections are similar
+        if self.get_num_pc() != other.get_num_pc():
+            raise AssertionError(f"Incorrect number of items in the"
+                                 f"scatter plot. Expected {self.get_num_pc()} "
+                                 f"found {other.get_num_pc()}")
         for pc, other_pc in zip(self.path_collections, other.path_collections):
             pc.assert_similar(other_pc, attrs)
 
         # check that the patches are similar
+        if self.get_num_patches() != other.get_num_patches():
+            raise AssertionError("Incorrect number of patches "
+                                 f"Expected {self.get_num_patches()} "
+                                 f"but got {other.get_num_patches()}")
         for patch, other_patch in zip(self.patches, other.patches):
             patch.assert_similar(other_patch, attrs)
 
