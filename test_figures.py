@@ -120,7 +120,7 @@ class Figure:
 
     def write_to_file(self, var_name, filename):
         """ Writes a figure object to a file """
-        with open(filename, "w") as f:
+        with open(filename, "a") as f:
             f.write("from matplotlib_figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
             f.write(f"{var_name} = {self}")
