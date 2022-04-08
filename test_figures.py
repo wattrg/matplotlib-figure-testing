@@ -236,7 +236,7 @@ class Axis:
         rep += f'        "ylabel": "{self.ylabel}", \n'
         rep += f'        "has_ylabel": {self.has_ylabel}, \n'
         rep += f'        "sharex": {self.sharex},\n'
-        rep += f'        "sharey": {self.sharey},\,'
+        rep += f'        "sharey": {self.sharey},\n'
         rep += f'        "xtick_label": {self.xtick_label}, \n'
         if self.ytick_label:
             rep += f'        "ytick_label": {self.ytick_label}, \n'
