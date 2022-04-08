@@ -123,7 +123,7 @@ class Figure:
         with open(filename, "a") as f:
             f.write("from matplotlib_figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
-            f.write(f"{var_name} = {self}")
+            f.write(f"{var_name} = {self}\n")
 
 class Axis:
     """Representation of a matplotlib axes object"""
