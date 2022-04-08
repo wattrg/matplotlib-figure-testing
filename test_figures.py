@@ -151,7 +151,7 @@ class Axis:
     """Representation of a matplotlib axes object"""
     all_attrs = ("title", "has_title", "xlabel", "has_xlabel", "ylabel", "has_ylabel",
                  "xtick_label", "ytick_label", "x_scale", "y_scale", "legend_entries",
-                 "num_legend_entries", "has_legend", "grid_spec")
+                 "num_legend_entries", "has_legend", "grid_spec", "sharex", "sharey")
     def __init__(self, ax):
         if isinstance(ax, dict):
             # We need to create an axis from a dictionary
@@ -169,6 +169,8 @@ class Axis:
             self.num_legend_entries = ax.get("num_legend_entries")
             self.has_legend = ax.get("has_legend")
             self.grid_spec = ax.get("grid_spec")
+            self.sharey = ax.get("sharey")
+            self.sharex = ax.get("sharex")
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
             self.lines = sorted([line for line in ax.get("lines")])
@@ -187,6 +189,14 @@ class Axis:
             self.ytick_label = ax.get_yaxis().get_ticklabels()
             self.x_scale = ax.get_xscale()
             self.y_scale = ax.get_yscale()
+            if ax._sharex:
+                self.sharex = ax.get_figure().get_axes().index(ax._sharex)
+            else:
+                self.sharex = None
+            if ax._sharey:
+                self.sharey = ax.get_figure().get_axes().index(ax._sharey)
+            else:
+                self.sharey = None
             legend = ax.get_legend()
             if legend:
                 self.legend_entries = [entry for entry in
@@ -225,6 +235,8 @@ class Axis:
         rep += f'        "has_xlabel": {self.has_xlabel}, \n'
         rep += f'        "ylabel": "{self.ylabel}", \n'
         rep += f'        "has_ylabel": {self.has_ylabel}, \n'
+        rep += f'        "sharex": {self.sharex},\n'
+        rep += f'        "sharey": {self.sharey},\,'
         rep += f'        "xtick_label": {self.xtick_label}, \n'
         if self.ytick_label:
             rep += f'        "ytick_label": {self.ytick_label}, \n'

@@ -187,6 +187,22 @@ def test_repr_similar_figures():
     ax.hist([1, 1, 1 ,2, 2, 3, 4, 7, 5, 5, 5, 6, 6, 7])
     assert_similar_figures(test_hist, fig)
 
+@register_test()
+def test_sharex():
+    plt.close("all")
+    fig, (ax1, ax2) = plt.subplots(ncols=2, sharex=True)
+    fig2, (ax3, ax4) = plt.subplots(ncols=2, sharex=True)
+
+    assert_similar_figures(fig, fig2)
+
+@register_test(should_fail=True)
+def test_sharex_fail():
+    plt.close("all")
+    fig, (ax1, ax2) = plt.subplots(ncols=2)
+    fig2, (ax3, ax4) = plt.subplots(ncols=2, sharex=True)
+
+    assert_similar_figures(fig, fig2)
+
 if __name__ == "__main__":
     plt.ion()
     run_tests()
