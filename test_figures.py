@@ -69,6 +69,27 @@ def capture_figures(func, *args, **kwargs):
     # we're done!
     return tuple(figs)
 
+class FigureOutput:
+    """ Handles writing figures to a file """
+    def __init__(self, file_name):
+        self.figs = []
+        self.file_name = file_name
+
+    def write_to_file(self, fig, fig_name):
+        self.figs.append((fig, fig_name))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        with open(self.file_name, "w") as f:
+            f.write("from matplotlib_figure_testing.test_figures import *\n")
+            f.write("from matplotlib.text import Text\n")
+            f.write("\n")
+            for fig, fig_name in self.figs:
+                f.write(f"{fig_name} = {Figure(fig)}")
+                f.write("\n")
+
 class Figure:
     """Representation of a matplotlib figure object"""
     all_attrs = ("suptitle", "has_suptitle")
@@ -118,12 +139,13 @@ class Figure:
         rep += "})"
         return rep
 
-    def write_to_file(self, var_name, filename):
-        """ Writes a figure object to a file """
-        with open(filename, "a") as f:
-            f.write("from matplotlib_figure_testing.test_figures import *\n")
-            f.write("from matplotlib.text import Text\n")
-            f.write(f"{var_name} = {self}\n")
+def common_element(test_tuple, ref_tuple):
+    """ Return True if an element in `test_tuple` is in `ref_tuple`
+    otherwise return False"""
+    for i in test_tuple:
+        if i in ref_tuple:
+            return True
+    return False
 
 class Axis:
     """Representation of a matplotlib axes object"""
@@ -242,29 +264,33 @@ class Axis:
                                      f"'{getattr(other, attr)}'.  "
                                      f"Expected '{getattr(self, attr)}'")
 
-        # check that the lines are similar. The lines may be in a different order
-        if self.get_num_lines() != other.get_num_lines():
-            raise AssertionError(f"Incorrect number of lines. "
-                                 f"Expected {self.get_num_lines()}, "
-                                 f"found {other.get_num_lines()}")
-        for line, other_line in zip(self.lines, other.lines):
-            line.assert_similar(other_line, attrs)
+        if attrs is None or common_element(attrs, Line.all_attrs):
+            # check that the lines are similar. The lines may be in a different order
+            if self.get_num_lines() != other.get_num_lines():
+                raise AssertionError(f"Incorrect number of lines. "
+                                    f"Expected {self.get_num_lines()}, "
+                                    f"found {other.get_num_lines()}")
+            for line, other_line in zip(self.lines, other.lines):
+                line.assert_similar(other_line, attrs)
 
-        # check that the path collections are similar
-        if self.get_num_pc() != other.get_num_pc():
-            raise AssertionError(f"Incorrect number of items in the"
-                                 f"scatter plot. Expected {self.get_num_pc()} "
-                                 f"found {other.get_num_pc()}")
-        for pc, other_pc in zip(self.path_collections, other.path_collections):
-            pc.assert_similar(other_pc, attrs)
+        if attrs is None or common_element(attrs, PathCollection.all_attrs):
+            # check that the path collections are similar
+            if self.get_num_pc() != other.get_num_pc():
+                raise AssertionError(f"Incorrect number of items in the"
+                                    f"scatter plot. Expected {self.get_num_pc()} "
+                                    f"found {other.get_num_pc()}")
+            for pc, other_pc in zip(self.path_collections, other.path_collections):
+                pc.assert_similar(other_pc, attrs)
 
-        # check that the patches are similar
-        if self.get_num_patches() != other.get_num_patches():
-            raise AssertionError("Incorrect number of patches "
-                                 f"Expected {self.get_num_patches()} "
-                                 f"but got {other.get_num_patches()}")
-        for patch, other_patch in zip(self.patches, other.patches):
-            patch.assert_similar(other_patch, attrs)
+
+        if attrs is None or common_element(attrs, Wedge.all_attrs) or common_element(attrs, Rectangle.all_attrs):
+            # check that the patches are similar
+            if self.get_num_patches() != other.get_num_patches():
+                raise AssertionError("Incorrect number of patches "
+                                    f"Expected {self.get_num_patches()} "
+                                    f"but got {other.get_num_patches()}")
+            for patch, other_patch in zip(self.patches, other.patches):
+                    patch.assert_similar(other_patch, attrs)
 
 def create_patch(patch):
     if isinstance(patch, matplotlib.patches.Wedge):

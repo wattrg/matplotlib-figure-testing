@@ -62,7 +62,7 @@ def test_pie_similar():
     fig2, ax2 = plt.subplots()
     ax2.pie([6, 5, 7, 8])
 
-    assert_similar_figures(fig, fig2, ("theta", "r"))
+    assert_similar_figures(fig, fig2, ("theta", "r", "patches"))
 
 @register_test(should_fail=True)
 def test_pie_dissimilar():
@@ -73,7 +73,7 @@ def test_pie_dissimilar():
     fig2, ax2 = plt.subplots()
     ax2.pie([6, 6, 7, 8])
 
-    assert_similar_figures(fig, fig2, ("theta", "r"))
+    assert_similar_figures(fig, fig2, ("theta", "r", "patches"))
 
 @register_test()
 def test_bar_similar():

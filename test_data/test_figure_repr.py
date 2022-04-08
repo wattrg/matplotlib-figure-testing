@@ -15,6 +15,7 @@ test_hist = Figure({
         "y_scale": "linear", 
         "legend_entries": [None],
         "num_legend_entries": 0,
+        "has_legend": False,
         "grid_spec": (1, 1), 
         "lines": [],
         "path_collections": [],
