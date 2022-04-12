@@ -50,7 +50,11 @@ def capture_figures(func, *args, **kwargs):
     plt.close("all")
 
     # call the function which generates the figures
-    func(*args, **kwargs)
+    try:
+        func(*args, **kwargs)
+    except Exception as err:
+        print(err)
+        raise Exception(err)
 
     # get handles to the figures
     fig_managers = _pylab_helpers.Gcf.get_all_fig_managers() 
@@ -80,7 +84,7 @@ def get_active_figures():
         Tuple[matplotlib.figure.Figure, ...]: Handles to
         the figures managed by matplotlib
     """
-    fig_managers = _pylabel_helpers.Gcf.get_all_fig_managers()
+    fig_managers = _pylab_helpers.Gcf.get_all_fig_managers()
     figs = []
     for fig_manager in fig_managers:
         figs.append(fig_manager.canvas.figure)
