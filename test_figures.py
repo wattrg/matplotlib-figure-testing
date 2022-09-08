@@ -104,8 +104,11 @@ class FigureOutput:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         with open(self.file_name, "w") as f:
-            f.write("from mpl_fig_testing.test_figures import *\n")
+            f.write("from matplotlib_figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
+            f.write("from matplotlib.path import Path\n")
+            f.write("from numpy import array as array\n")
+            f.write("from numpy import uint8\n")
             f.write("\n")
             for fig, fig_name in self.figs:
                 f.write(f"{fig_name} = {Figure(fig)}")
@@ -269,7 +272,7 @@ class Axis:
         rep += f'        "grid_spec": {self.grid_spec}, \n'
         lines_repr = repr([line for line in self.lines])
         rep += '        "lines": ' + f"{lines_repr},\n"
-        pc_repr = repr([{pc} for pc in self.path_collections])
+        pc_repr = repr([pc for pc in self.path_collections])
         rep += f'        "path_collections": {pc_repr},\n'
         patch_repr = repr([patch for patch in self.patches])
         rep += f'        "patches": {patch_repr},\n'
@@ -448,9 +451,9 @@ class PathCollection:
             self.marker = pc.get_paths()[0]
 
     def __repr__(self):
-        rep = f'\n        "x_data": np.{repr(self.x_data)}, \n'
+        rep = f'         {{"x_data": np.{repr(self.x_data)}, \n'
         rep += f'        "y_data": np.{repr(self.y_data)}, \n'
-        rep += f'        "marker": {self.marker}'
+        rep += f'        "marker": {self.marker} }}'
         return rep
 
     def __eq__(self, other):
