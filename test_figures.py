@@ -120,10 +120,14 @@ class Figure:
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
+            self.sup_xlabel = fig._supxlabel
+            self.sup_ylabel = fig._supylabel
             self.has_suptitle = fig.get("has_suptitle", False)
             self.axes = [axis for axis in fig["axes"]]
         else:
             sup_title = fig._suptitle
+            self.sup_xlabel = fig._supxlabel
+            self.sup_ylabel = fig._supylabel
             if sup_title:
                 self.suptitle = fig._suptitle.get_text()
                 self.has_suptitle = True
@@ -146,7 +150,16 @@ class Figure:
                                  f"found {self.get_num_axes()}")
 
         for attr in set(self.all_attrs).intersection(test_attrs):
-            if getattr(self, attr) != getattr(other, attr):
+            correct = True
+            if attr in ("sup_xlabel", "sup_ylabel"):
+                if not check_text_equal(getattr(self, attr), 
+                                        getattr(other, attr)):
+                    correct = False
+
+            elif getattr(self, attr) != getattr(other, attr):
+                correct = False
+
+            if not correct:
                 raise AssertionError(f"Incorrect {attr}. "
                                      f"Expected {getattr(other, attr)}, "
                                      f"foud {getattr(self, attr)} \n")
@@ -159,6 +172,8 @@ class Figure:
         rep = "Figure({\n"
         rep += f'    "suptitle": "{self.suptitle}", \n'
         rep += f'    "has_suptitle": {self.has_suptitle},\n'
+        rep += f'    "sup_xlabel": {self.sup_xlabel},\n'
+        rep += f'    "sup_ylabel": {self.sup_ylabel},\n'
         rep += f'    "axes": {axis_repr}\n'
         rep += "})"
         return rep
