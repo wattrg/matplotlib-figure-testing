@@ -120,8 +120,8 @@ class Figure:
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
-            self.sup_xlabel = fig._supxlabel
-            self.sup_ylabel = fig._supylabel
+            self.sup_xlabel = fig.get("sup_xlabel", None)
+            self.sup_ylabel = fig.get("sup_ylabel", None)
             self.has_suptitle = fig.get("has_suptitle", False)
             self.axes = [axis for axis in fig["axes"]]
         else:
