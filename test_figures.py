@@ -108,7 +108,8 @@ class FigureOutput:
             f.write("from matplotlib.text import Text\n")
             f.write("from matplotlib.path import Path\n")
             f.write("from numpy import array as array\n")
-            f.write("from numpy import uint8\n")
+            f.write("from numpy import uint8, float64\n")
+            f.write("import numpy as np\n")
             f.write("\n")
             for fig, fig_name in self.figs:
                 f.write(f"{fig_name} = {Figure(fig)}")
