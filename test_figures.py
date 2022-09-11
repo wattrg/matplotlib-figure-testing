@@ -250,7 +250,7 @@ class Axis:
             self.grid_spec = ax.get_gridspec().get_geometry()
             # sort the lines, path_collections and patches, so that
             # the order that they get plotted in doesn't matter
-            self.lines = sorted([Line(line) for line in ax.get_lines()])
+            self.lines = sorted([Line(line) for line in ax.get_lines() if line.get_xdata().size!=0])
             self.path_collections = sorted([PathCollection(pc)
                                      for pc in ax.collections])
             self.patches = sorted([create_patch(patch) for patch in ax.patches])
@@ -641,6 +641,7 @@ class Line:
                 if not data_correct:
                     msg  = f"A line (colour='{self.colour}', "
                     msg += f"label='{self.label}', "
+                    msg += f"marker='{self.marker}', "
                     msg += f"linestyle='{self.linestyle}', "
                     msg += f"linewidth={self.linewidth}) "
                     msg +=  "isn't where it should be\n"
