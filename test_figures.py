@@ -6,7 +6,7 @@ import math
 import re
 
 
-def assert_similar_figures(ref_fig, other_fig, attrs=None):
+def assert_similar_figures(ref_fig, other_fig, attrs=None, tol=1e-5):
     """
     Assert that two figures are similar.
 
@@ -21,7 +21,7 @@ def assert_similar_figures(ref_fig, other_fig, attrs=None):
         ref_fig = Figure(ref_fig)
     if not isinstance(other_fig, Figure):
         other_fig = Figure(other_fig)
-    ref_fig.assert_similar(other_fig, attrs)
+    ref_fig.assert_similar(other_fig, attrs, tol=tol)
 
 def capture_figures(func, *args, **kwargs):
     """ 
@@ -117,7 +117,7 @@ class FigureOutput:
 
 class Figure:
     """Representation of a matplotlib figure object"""
-    all_attrs = ("suptitle", "has_suptitle")
+    all_attrs = ("suptitle", "has_suptitle", "sup_ylabel", "sup_xlabel")
     def __init__(self, fig):
         if isinstance(fig, dict):
             self.suptitle = fig.get("suptitle")
@@ -141,7 +141,7 @@ class Figure:
         """Returns the number of axes in the figure"""
         return len(self.axes)
 
-    def assert_similar(self, other, attrs=None):
+    def assert_similar(self, other, attrs=None, tol=None):
         """Assert that the Figure is similar to another figure"""
 
         test_attrs = self.all_attrs if not attrs else attrs
@@ -154,7 +154,8 @@ class Figure:
             correct = True
             if attr in ("sup_xlabel", "sup_ylabel"):
                 if not check_text_equal(getattr(self, attr), 
-                                        getattr(other, attr)):
+                                        getattr(other, attr),
+                                        tol=tol):
                     correct = False
 
             elif getattr(self, attr) != getattr(other, attr):
@@ -166,7 +167,7 @@ class Figure:
                                      f"foud {getattr(self, attr)} \n")
 
         for axis, other_axis in zip(self.axes, other.axes):
-            axis.assert_similar(other_axis, attrs)
+            axis.assert_similar(other_axis, attrs, tol=tol)
 
     def __repr__(self):
         axis_repr = repr(list([axis for axis in self.axes]))
@@ -295,7 +296,7 @@ class Axis:
         rep += "    })\n"
         return rep
 
-    def assert_similar(self, other, attrs=None):
+    def assert_similar(self, other, attrs=None, tol=None):
         """Assert that the axis is similar to another axis"""
         test_attrs = self.all_attrs if not attrs else attrs
 
@@ -323,7 +324,7 @@ class Axis:
                                     f"Expected {self.get_num_lines()}, "
                                     f"found {other.get_num_lines()}")
             for line, other_line in zip(self.lines, other.lines):
-                line.assert_similar(other_line, attrs)
+                line.assert_similar(other_line, attrs, tol=tol)
 
         if attrs is None or common_element(attrs, PathCollection.all_attrs):
             # check that the path collections are similar
@@ -332,7 +333,7 @@ class Axis:
                                     f"scatter plot. Expected {self.get_num_pc()} "
                                     f"found {other.get_num_pc()}")
             for pc, other_pc in zip(self.path_collections, other.path_collections):
-                pc.assert_similar(other_pc, attrs)
+                pc.assert_similar(other_pc, attrs, tol=tol)
 
 
         if attrs is None or common_element(attrs, Wedge.all_attrs) or common_element(attrs, Rectangle.all_attrs):
@@ -342,7 +343,7 @@ class Axis:
                                     f"Expected {self.get_num_patches()} "
                                     f"but got {other.get_num_patches()}")
             for patch, other_patch in zip(self.patches, other.patches):
-                    patch.assert_similar(other_patch, attrs)
+                    patch.assert_similar(other_patch, attrs, tol=tol)
 
 def create_patch(patch):
     if isinstance(patch, matplotlib.patches.Wedge):
@@ -354,7 +355,7 @@ class Patch:
     """
     Representation of a matplotlib patch
     """
-    def check_similar(self, other, attrs=None):
+    def check_similar(self, other, attrs=None, tol=None):
         test_attrs = self.all_attrs if not attrs else attrs
         if self.patch_type != other.patch_type:
             msg = f"Incorrect shape. Expected {self.patch_type}, got {other.patch_type}"
@@ -367,9 +368,9 @@ class Patch:
                 return False, msg
         return True, None
 
-    def assert_similar(self, other, attrs=None):
+    def assert_similar(self, other, attrs=None, tol=None):
         test_attrs = self.all_attrs if not attrs else attrs
-        similar, msg = self.check_similar(other, test_attrs)
+        similar, msg = self.check_similar(other, test_attrs, tol=tol)
         if not similar:
             raise AssertionError(msg)
 
@@ -493,14 +494,15 @@ class PathCollection:
             return False
         return False
 
-    def check_similar(self, other, attrs=None):
+    def check_similar(self, other, attrs=None, tol=None):
         """ Check if two PathCollections are similar """
         test_attrs = self.all_attrs if not attrs else attrs
         for attr in set(test_attrs).intersection(self.all_attrs):
             if attr in ("x_data", "y_data"):
                 try:
                     data_correct = np.allclose(getattr(self, attr),
-                                                 getattr(other, attr))
+                                               getattr(other, attr),
+                                               atol=tol)
                 except ValueError:
                     data_correct = False
                 finally:
@@ -510,9 +512,11 @@ class PathCollection:
             elif attr == "marker":
                 try:
                     vert_correct = np.allclose(self.marker.vertices,
-                                               other.marker.vertices)
+                                               other.marker.vertices,
+                                               atol=tol)
                     code_correct = np.allclose(self.marker.vertices,
-                                               other.marker.vertices)
+                                               other.marker.vertices,
+                                               atol=tol)
                     marker_correct = vert_correct and code_correct
 
                 except ValueError:
@@ -522,10 +526,10 @@ class PathCollection:
         return True, None
 
 
-    def assert_similar(self, other, attrs=None):
+    def assert_similar(self, other, attrs=None, tol=None):
         """ Assert two PathCollections are similar """
         test_attrs = self.all_attrs if not attrs else attrs
-        similar, msg = self.check_similar(other, test_attrs)
+        similar, msg = self.check_similar(other, test_attrs, tol=tol)
         if not similar:
             raise AssertionError(msg)
 
@@ -622,7 +626,7 @@ class Line:
             return False
         return False
 
-    def check_similar(self, other, attrs=None):
+    def check_similar(self, other, attrs=None, tol=None):
         """ Check if two lines are similar """
 
         test_attrs = self.all_attrs if not attrs else attrs
@@ -634,7 +638,8 @@ class Line:
                 # for example when the data are different lengths
                 try:
                     data_correct = np.allclose(getattr(self, attr),
-                                               getattr(other, attr))
+                                               getattr(other, attr),
+                                               atol=tol)
                 except:
                     data_correct = False
 
@@ -656,16 +661,16 @@ class Line:
                     return False, msg
         return True, None
 
-    def assert_similar(self, other, attrs=None):
+    def assert_similar(self, other, attrs=None, tol=None):
         """Assert that the line is similar to another line"""
 
         test_attrs = self.all_attrs if not attrs else attrs
-        similar, msg = self.check_similar(other, test_attrs)
+        similar, msg = self.check_similar(other, test_attrs, tol=tol)
         if not similar:
             raise AssertionError(msg)
 
 
-def check_text_equal(text, ref_text):
+def check_text_equal(text, ref_text, tol=None):
     """Check if two matplotlib.text.Text objects are equal"""
     if text is None and ref_text is None:
         return True
