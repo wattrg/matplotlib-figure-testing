@@ -147,8 +147,8 @@ class Figure:
         test_attrs = self.all_attrs if not attrs else attrs
         if self.get_num_axes() != other.get_num_axes():
             raise AssertionError(f"Incorrect number of axes (subfigures). "
-                                 f"Expected {other.get_num_axes()}, "
-                                 f"found {self.get_num_axes()}")
+                                 f"Expected {self.get_num_axes()}, "
+                                 f"found {other.get_num_axes()}")
 
         for attr in set(self.all_attrs).intersection(test_attrs):
             correct = True
@@ -163,8 +163,8 @@ class Figure:
 
             if not correct:
                 raise AssertionError(f"Incorrect {attr}. "
-                                     f"Expected {getattr(other, attr)}, "
-                                     f"foud {getattr(self, attr)} \n")
+                                     f"Expected {getattr(self, attr)}, "
+                                     f"foud {getattr(other, attr)} \n")
 
         for axis, other_axis in zip(self.axes, other.axes):
             axis.assert_similar(other_axis, attrs, tol=tol)
