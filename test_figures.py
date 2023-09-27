@@ -104,7 +104,7 @@ class FigureOutput:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         with open(self.file_name, "w") as f:
-            f.write("from matplotlib_figure_testing.test_figures import *\n")
+            f.write("from figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
             f.write("from matplotlib.path import Path\n")
             f.write("from numpy import array as array\n")
