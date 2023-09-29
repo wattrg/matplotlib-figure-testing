@@ -639,10 +639,14 @@ class Line:
                 # we have numeric data, so should test if close
                 # use a try except block to catch when allclose errors
                 # for example when the data are different lengths
+                data = getattr(self, attr)
                 try:
-                    data_correct = np.allclose(getattr(self, attr),
-                                               getattr(other, attr),
-                                               atol=tol)
+                    if type(data) == np.ndarray and data.dtype == 'datetime64[us]':
+                        data_correct = np.all(data == getattr(other, attr))
+                    else:
+                        data_correct = np.allclose(
+                            data, getattr(other, attr), atol=tol
+                        )
                 except:
                     data_correct = False
 
