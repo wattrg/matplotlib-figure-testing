@@ -117,15 +117,17 @@ class FigureOutput:
 
 class Figure:
     """Representation of a matplotlib figure object"""
-    all_attrs = ("suptitle", "has_suptitle", "sup_ylabel", "sup_xlabel")
+    all_attrs = ("suptitle", "has_suptitle", "sup_ylabel", "sup_xlabel", "size")
     def __init__(self, fig):
         if isinstance(fig, dict):
+            self.size = fig.get("size")
             self.suptitle = fig.get("suptitle")
             self.sup_xlabel = fig.get("sup_xlabel", None)
             self.sup_ylabel = fig.get("sup_ylabel", None)
             self.has_suptitle = fig.get("has_suptitle", False)
             self.axes = [axis for axis in fig["axes"]]
         else:
+            self.size = fig.get_figwidth(), fig.get_figheight()
             sup_title = fig._suptitle
             self.sup_xlabel = fig._supxlabel
             self.sup_ylabel = fig._supylabel
@@ -172,6 +174,7 @@ class Figure:
     def __repr__(self):
         axis_repr = repr(list([axis for axis in self.axes]))
         rep = "Figure({\n"
+        rep += f'    "size": {self.size},\n'
         rep += f'    "suptitle": "{self.suptitle}", \n'
         rep += f'    "has_suptitle": {self.has_suptitle},\n'
         rep += f'    "sup_xlabel": {self.sup_xlabel},\n'
@@ -681,5 +684,7 @@ def check_text_equal(text, ref_text, tol=None):
     if text.get_position() != ref_text.get_position():
         return False
     if text.get_text() != ref_text.get_text():
+        return False
+    if text.get_size() != ref_text.get_size():
         return False
     return True
