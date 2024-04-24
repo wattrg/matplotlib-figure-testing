@@ -396,7 +396,7 @@ class Rectangle(Patch):
     Representation of a matplotlib Rectangle patch
     """
     patch_type = "rectangle"
-    all_attrs = ("height", "width", "position_x", "position_y")
+    all_attrs = ("position_x", "height", "width", "position_y")
 
     def __init__(self, rectangle):
         if isinstance(rectangle, dict):
