@@ -51,7 +51,7 @@ def capture_figures(func, *args, **kwargs):
 
     # call the function which generates the figures
     try:
-        func(*args, **kwargs)
+        returns = func(*args, **kwargs)
     except Exception as err:
         print(err)
         raise Exception(err)
@@ -71,7 +71,7 @@ def capture_figures(func, *args, **kwargs):
     _pylab_helpers.Gcf.figs = original_figs
 
     # we're done!
-    return tuple(figs)
+    return tuple(figs), returns
 
 def get_active_figures():
     """
