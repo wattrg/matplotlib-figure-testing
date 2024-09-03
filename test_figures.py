@@ -103,7 +103,7 @@ class FigureOutput:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        with open(self.file_name, "w") as f:
+        with open(self.file_name, "w", encoding="utf-8") as f:
             f.write("from autograder.matplotlib_figure_testing.test_figures import *\n")
             f.write("from matplotlib.text import Text\n")
             f.write("from matplotlib.path import Path\n")
