@@ -353,6 +353,8 @@ def create_patch(patch):
         return Wedge(patch)
     elif isinstance(patch, matplotlib.patches.Rectangle):
         return Rectangle(patch)
+    elif isinstance(patch, matplotlib.patches.Circle):
+        return Circle(patch)
 
 class Patch:
     """
@@ -445,6 +447,30 @@ class Wedge(Patch):
         rep += f"'theta1': {self.theta1}, "
         rep += f"'theta2': {self.theta2}, "
         rep += f"'theta': {self.theta}, "
+        rep += f"'center_x': {self.center_x}, "
+        rep += f"'center_y': {self.center_y}"
+        rep += "})"
+        return rep
+    
+@total_ordering
+class Circle(Patch):
+    """
+    Representation of a matplotlib Circle patch
+    """
+    patch_type = "circle"
+    all_attrs = ("radius", "center_x", "center_y")
+
+    def __init__(self, circle):
+        if isinstance(circle, dict):
+            self.radius = circle.get("radius")
+            self.center_x, self.center_y = circle.get("center_x"), circle.get("center_y")
+        else:
+            self.radius = circle.radius
+            self.center_x, self.center_y = circle.center
+
+    def __repr__(self):
+        rep = "Circle({"
+        rep += f"'radius': {self.radius}, "
         rep += f"'center_x': {self.center_x}, "
         rep += f"'center_y': {self.center_y}"
         rep += "})"
