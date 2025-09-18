@@ -175,10 +175,10 @@ class Figure:
         axis_repr = repr(list([axis for axis in self.axes]))
         rep = "Figure({\n"
         rep += f'    "size": {self.size},\n'
-        rep += f'    "suptitle": "{self.suptitle}", \n'
-        rep += f'    "has_suptitle": {self.has_suptitle},\n'
-        rep += f'    "sup_xlabel": {self.sup_xlabel},\n'
-        rep += f'    "sup_ylabel": {self.sup_ylabel},\n'
+        rep += f'    "suptitle": """{self.suptitle}""", \n'
+        rep += f'    "has_suptitle": """{self.has_suptitle}""",\n'
+        rep += f'    "sup_xlabel": """{self.sup_xlabel}""",\n'
+        rep += f'    "sup_ylabel": """{self.sup_ylabel}""",\n'
         rep += f'    "axes": {axis_repr}\n'
         rep += "})"
         return rep
@@ -273,19 +273,19 @@ class Axis:
 
     def __repr__(self):
         rep = "Axis({\n"
-        rep += f'        "title": "{self.title}", \n'
+        rep += f'        "title": """{self.title}""", \n'
         rep += f'        "has_title": {self.has_title}, \n'
-        rep += f'        "xlabel": "{self.xlabel}", \n'
+        rep += f'        "xlabel": """{self.xlabel}""", \n'
         rep += f'        "has_xlabel": {self.has_xlabel}, \n'
-        rep += f'        "ylabel": "{self.ylabel}", \n'
+        rep += f'        "ylabel": """{self.ylabel}""", \n'
         rep += f'        "has_ylabel": {self.has_ylabel}, \n'
         rep += f'        "sharex": {self.sharex},\n'
         rep += f'        "sharey": {self.sharey},\n'
         rep += f'        "xtick_label": {self.xtick_label}, \n'
         if self.ytick_label:
             rep += f'        "ytick_label": {self.ytick_label}, \n'
-        rep += f'        "x_scale": "{self.x_scale}", \n'
-        rep += f'        "y_scale": "{self.y_scale}", \n'
+        rep += f'        "x_scale": """{self.x_scale}""", \n'
+        rep += f'        "y_scale": """{self.y_scale}""", \n'
         rep += f'        "legend_entries": {repr(self.legend_entries)}, \n'
         rep += f'        "has_legend": {self.has_legend}, \n'
         rep += f'        "num_legend_entries": {self.num_legend_entries},\n'
