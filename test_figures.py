@@ -166,7 +166,7 @@ class Figure:
             if not correct:
                 raise AssertionError(f"Incorrect {attr}. "
                                      f"Expected {getattr(self, attr)}, "
-                                     f"foud {getattr(other, attr)} \n")
+                                     f"found {getattr(other, attr)} \n")
 
         for axis, other_axis in zip(self.axes, other.axes):
             axis.assert_similar(other_axis, attrs, tol=tol)
