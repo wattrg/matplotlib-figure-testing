@@ -176,9 +176,9 @@ class Figure:
         rep = "Figure({\n"
         rep += f'    "size": {self.size},\n'
         rep += f'    "suptitle": """{self.suptitle}""", \n'
-        rep += f'    "has_suptitle": """{self.has_suptitle}""",\n'
-        rep += f'    "sup_xlabel": """{self.sup_xlabel}""",\n'
-        rep += f'    "sup_ylabel": """{self.sup_ylabel}""",\n'
+        rep += f'    "has_suptitle": {self.has_suptitle},\n'
+        rep += f'    "sup_xlabel": {self.sup_xlabel},\n'
+        rep += f'    "sup_ylabel": {self.sup_ylabel},\n'
         rep += f'    "axes": {axis_repr}\n'
         rep += "})"
         return rep
